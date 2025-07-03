@@ -1,0 +1,46 @@
+{
+  "name": "initmyrepo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": " npm-run-all --parallel dev:react dev:electron",
+    "dev:react": "vite",
+    "dev:electron": "bun run transpile:electron && cross-env NODE_ENV=development electron .",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "transpile:electron": "tsc --project src/electron/tsconfig.json",
+    "dist:mac": "bun run transpile:electron && bun run build && electron-builder --mac",
+    "dist:win": "bun run transpile:electron && bun run build && electron-builder --win --x64",
+    "dist:linux": "bun run transpile:electron && bun run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.1.11",
+    "clsx": "^2.1.1",
+    "postcss": "^8.5.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.5.2",
+    "cross-env": "^7.0.3",
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^9.29.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.2.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vite": "^7.0.0"
+  }
+}

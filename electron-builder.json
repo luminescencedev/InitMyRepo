@@ -1,0 +1,16 @@
+{
+  "appId": "com.luminescence.b-loader",
+  "files": ["dist-electron", "dist-react"],
+  "icon": "/luminescence_icon.png",
+  "extraResources": ["src/assets/**"],
+  "mac": {
+    "target": "dmg"
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  },
+  "win": {
+    "target": "nsis"
+  }
+}
