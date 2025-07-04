@@ -1,1 +1,11 @@
-@import "tailwdincss";
+@import "tailwindcss";
+
+:root {
+  --color-background: oklch(21.033% 0.00588 285.832);
+  --color-foreground: oklch(98.5% 0 0);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
