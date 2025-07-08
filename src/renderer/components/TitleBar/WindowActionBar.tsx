@@ -1,9 +1,10 @@
 import { cn } from "../../utils/cn";
+const noDrag = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
 
 const windowActionBar: React.FC = () => {
   return (
     <>
-      <div className={cn("flex space-x-2 items-center ")}>
+      <div className={cn("h-5 flex space-x-2 items-center")} style={noDrag}>
         <button
           onClick={() => window.electron.ipcRenderer.send("minimize")}
           className={cn(
