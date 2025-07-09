@@ -11,6 +11,8 @@ declare global {
           listener: (...args: unknown[]) => void
         ) => void;
       };
+      selectPath: () => Promise<string | null>;
+      initRepo: (targetPath: string, repoUrl: string) => Promise<void>;
     };
   }
 }

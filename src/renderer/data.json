@@ -1,0 +1,16 @@
+{
+  "templates": [
+    {
+      "name": "React + Vite + TypeScript + TailwindCSS",
+      "repo": "https://github.com/oluqom/typescript-react-tailwind-vite.git"
+    },
+    {
+      "name": "Express + Node.js",
+      "repo": "https://github.com/expressjs/express"
+    },
+    {
+      "name": "Custom Repo",
+      "repo": ""
+    }
+  ]
+}

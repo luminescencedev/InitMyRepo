@@ -1,4 +1,8 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { dialog } from "electron";
+import fs from "fs";
+import path from "path";
+import { exec } from "child_process";
 
 // Define valid channels for TypeScript
 type ValidSendChannels =
@@ -46,6 +50,13 @@ contextBridge.exposeInMainWorld("electron", {
     removeListener: (channel: string, listener: (...args: any[]) => void) => {
       ipcRenderer.removeListener(channel, listener);
     },
+  },
+  selectPath: async () => {
+    // Use IPC to main process for dialog
+    return await ipcRenderer.invoke("select-path");
+  },
+  initRepo: async (targetPath: string, repoUrl: string) => {
+    return await ipcRenderer.invoke("init-repo", targetPath, repoUrl);
   },
 });
 

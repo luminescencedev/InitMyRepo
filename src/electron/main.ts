@@ -2,7 +2,9 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { isDev } from "./utils.js";
 import { createTray } from "./tray.js";
-import { globalShortcut } from "electron";
+import { globalShortcut, dialog } from "electron";
+import fs from "fs";
+import { exec } from "child_process";
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -96,6 +98,52 @@ app.whenReady().then(() => {
   });
   mainWindow.on("leave-full-screen", () => {
     mainWindow.webContents.send("fullscreen-state", false);
+  });
+
+  ipcMain.handle("select-path", async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ["openDirectory"],
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
+  ipcMain.handle("init-repo", async (_event, targetPath, repoUrl) => {
+    return new Promise((resolve, reject) => {
+      if (!targetPath || !repoUrl) return reject("Missing path or repoUrl");
+      // Clone repo
+      exec(`git clone ${repoUrl} .`, { cwd: targetPath }, (err) => {
+        if (err) return reject("Erreur lors du clonage: " + err);
+        // Remove .git
+        fs.rmSync(path.join(targetPath, ".git"), {
+          recursive: true,
+          force: true,
+        });
+        // Re-init git
+        exec(`git init`, { cwd: targetPath }, (err2) => {
+          if (err2) return reject("Erreur git init: " + err2);
+          // Add all files and commit
+          exec(
+            `git add . && git commit -m "Initial commit"`,
+            { cwd: targetPath },
+            (errCommit) => {
+              if (errCommit) return reject("Erreur commit initial: " + errCommit);
+              // Install deps
+              exec(`npm install`, { cwd: targetPath }, (err3) => {
+                if (err3) return reject("Erreur npm install: " + err3);
+                // Ouvre VSCode dans le dossier du projet
+                exec("code .", { cwd: targetPath }, (err4) => {
+                  if (err4) return reject("Erreur ouverture VSCode: " + err4);
+                  resolve("OK");
+                });
+              });
+            }
+          );
+        });
+      });
+    });
   });
 
   createTray(mainWindow);

@@ -15,6 +15,7 @@ body {
   outline-offset: 2px;
   transition: outline-color 0.2s;
   border-radius: 4px;
+  z-index: 1000;
 }
 
 /* Scrollbar personnalisée fine et grise transparente */
