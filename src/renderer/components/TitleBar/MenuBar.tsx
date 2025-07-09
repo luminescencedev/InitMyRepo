@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "../../utils/cn";
 import MenuDropdown from "./MenuDropdown";
+import { VscMenu } from "react-icons/vsc";
 
 const drag = { WebkitAppRegion: "drag" } as React.CSSProperties;
 const noDrag = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
@@ -41,6 +42,11 @@ const menus = [
         shortcut: "F11",
         onClick: () => window.electron?.ipcRenderer.send("fullscreen"),
       },
+      {
+        label: "Toggle Developer Tools",
+        shortcut: "Ctrl+Shift+I",
+        onClick: () => window.electron?.ipcRenderer.send("toggle-devtools"),
+      },
     ],
   },
   {
@@ -66,6 +72,7 @@ const menus = [
 
 const MenuBar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -73,60 +80,84 @@ const MenuBar: React.FC = () => {
     const handleClick = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setActiveMenu(null);
+        setHamburgerOpen(false);
       }
     };
-    if (activeMenu) {
+
+    if (activeMenu || hamburgerOpen) {
       document.addEventListener("mousedown", handleClick);
     } else {
       document.removeEventListener("mousedown", handleClick);
     }
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [activeMenu]);
-
-  // Keyboard navigation (optional)
-  // ...
+  }, [activeMenu, hamburgerOpen]);
 
   return (
     <nav
       ref={navRef}
       className={cn(
-        "relative flex space-x-2 text-xs font-medium select-none text-zinc-500"
+        "relative flex items-center text-xs font-medium select-none text-zinc-500"
       )}
       style={drag}
     >
-      {menus.map((menu) => (
-        <div
-          key={menu.label}
-          className="relative"
-          style={noDrag}
-          onMouseEnter={() => {
-            if (activeMenu) setActiveMenu(menu.label);
-          }}
-        >
-          <button
-            className={cn(
-              "hover:bg-zinc-800 p-1 rounded-sm  px-2 ",
-              activeMenu === menu.label && "bg-zinc-800 text-white"
-            )}
-            tabIndex={0}
-            onClick={() =>
-              setActiveMenu(activeMenu === menu.label ? null : menu.label)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === "ArrowDown")
-                setActiveMenu(menu.label);
-              if (e.key === "Escape") setActiveMenu(null);
+      {/* Menu classique visible à partir de lg */}
+      <div className="hidden lg:flex space-x-2 w-full">
+        {menus.map((menu) => (
+          <div
+            key={menu.label}
+            className="relative"
+            style={noDrag}
+            onMouseEnter={() => {
+              if (activeMenu) setActiveMenu(menu.label);
             }}
           >
-            {menu.label}
-          </button>
-          <MenuDropdown
-            open={activeMenu === menu.label}
-            items={menu.items}
-            className="top-7 left-0 min-w-[220px]"
-          />
-        </div>
-      ))}
+            <button
+              className={cn(
+                "hover:bg-zinc-800 p-1 rounded-sm px-2 ",
+                activeMenu === menu.label && "bg-zinc-800 text-white"
+              )}
+              tabIndex={0}
+              onClick={() =>
+                setActiveMenu(activeMenu === menu.label ? null : menu.label)
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "ArrowDown")
+                  setActiveMenu(menu.label);
+                if (e.key === "Escape") setActiveMenu(null);
+              }}
+            >
+              {menu.label}
+            </button>
+            <MenuDropdown
+              open={activeMenu === menu.label}
+              items={menu.items}
+              className="top-7 left-0 min-w-[220px]"
+            />
+          </div>
+        ))}
+      </div>
+      {/* Menu hamburger sous lg */}
+      <div className="flex lg:hidden w-full">
+        <button
+          className={cn(
+            "flex justify-center items-center w-8 h-6 rounded hover:bg-zinc-800 transition relative overflow-hidden"
+          )}
+          style={noDrag}
+          aria-label={hamburgerOpen ? "Fermer le menu" : "Ouvrir le menu"}
+          onClick={() => setHamburgerOpen((v) => !v)}
+        >
+          <VscMenu className="w-5 h-5 text-zinc-500 transition-all duration-150" />
+        </button>
+        {/* Dropdown du menu hamburger */}
+        <MenuDropdown
+          open={hamburgerOpen}
+          items={menus.flatMap((menu) => [
+            { label: `--- ${menu.label} ---`, disabled: true },
+            ...menu.items,
+          ])}
+          className="top-7.5 min-w-[220px] max-h-[calc(100vh-80px)] overflow-y-auto"
+        />
+      </div>
     </nav>
   );
 };

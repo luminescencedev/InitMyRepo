@@ -11,7 +11,7 @@ const TitleBar: React.FC = () => {
       className={cn("h-9 w-screen flex items-center text-zinc-500")}
       style={drag}
     >
-      <div className={cn("flex items-center h-full w-[33vw]")}>
+      <div className={cn("flex items-center h-full w-[33vw] ")}>
         <img
           src="/luminescence_icon.png"
           alt=""
@@ -23,7 +23,7 @@ const TitleBar: React.FC = () => {
       </div>
       <div
         className={cn(
-          "h-full w-[34vw] p-[5px] flex items-center justify-center"
+          "h-full w-[34vw] p-[5px] flex items-center justify-center "
         )}
         style={drag}
       >
@@ -33,7 +33,7 @@ const TitleBar: React.FC = () => {
       </div>
       <div
         className={cn(
-          "h-full w-[33vw] flex items-center justify-end pl-3 pr-4"
+          "h-full w-[33vw] flex items-center justify-end pl-3 pr-4 "
         )}
         style={drag}
       >

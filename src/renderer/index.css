@@ -16,3 +16,22 @@ body {
   transition: outline-color 0.2s;
   border-radius: 4px;
 }
+
+/* Scrollbar personnalisée fine et grise transparente */
+::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 120, 130, 0.18);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 120, 130, 0.28);
+}
+
+/* Pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 120, 130, 0.18) transparent;
+}
