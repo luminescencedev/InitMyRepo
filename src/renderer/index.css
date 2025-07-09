@@ -3,9 +3,16 @@
 :root {
   --color-background: oklch(21.033% 0.00588 285.832);
   --color-foreground: oklch(98.5% 0 0);
+  --color-focus-outline: oklch(60% 0 0 / 0.5);
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+}
+:focus-visible {
+  outline: 2px solid var(--color-focus-outline);
+  outline-offset: 2px;
+  transition: outline-color 0.2s;
+  border-radius: 4px;
 }

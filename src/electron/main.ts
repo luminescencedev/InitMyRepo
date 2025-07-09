@@ -81,6 +81,23 @@ app.whenReady().then(() => {
     }
   });
 
+  // Ajout : répondre à la requête d'état fullscreen
+  ipcMain.on("get-fullscreen-state", () => {
+    if (mainWindow) {
+      mainWindow.webContents.send(
+        "fullscreen-state",
+        mainWindow.isFullScreen()
+      );
+    }
+  });
+
+  mainWindow.on("enter-full-screen", () => {
+    mainWindow.webContents.send("fullscreen-state", true);
+  });
+  mainWindow.on("leave-full-screen", () => {
+    mainWindow.webContents.send("fullscreen-state", false);
+  });
+
   createTray(mainWindow);
 
   handleCloseEvents(mainWindow);

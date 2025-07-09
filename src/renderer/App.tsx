@@ -5,9 +5,7 @@ function App() {
   return (
     <>
       <TitleBar />
-      <div className={cn("h-[calc(100vh-36px)] p-2")}>
-        <h1>Bonjour monde!</h1>
-      </div>
+      <div className={cn("h-[calc(100vh-36px)] w-screen flex flex-row")}></div>
     </>
   );
 }

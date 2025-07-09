@@ -105,7 +105,7 @@ const MenuBar: React.FC = () => {
         >
           <button
             className={cn(
-              "hover:bg-zinc-800 p-1 rounded-sm focus:outline-none px-2 transition-colors",
+              "hover:bg-zinc-800 p-1 rounded-sm  px-2 ",
               activeMenu === menu.label && "bg-zinc-800 text-white"
             )}
             tabIndex={0}
