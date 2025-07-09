@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 // Define valid channels for TypeScript
-type ValidSendChannels = "minimize" | "maximize" | "close";
+type ValidSendChannels = "minimize" | "maximize" | "close" | "fullscreen";
 
 // Create type-safe IPC interface
 interface ElectronAPI {
@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("electron", {
         "minimize",
         "maximize",
         "close",
+        "fullscreen",
       ];
       if (validChannels.includes(channel as ValidSendChannels)) {
         console.log(`Sending IPC message: ${channel}`, args);

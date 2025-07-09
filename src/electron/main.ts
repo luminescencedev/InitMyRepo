@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import { isDev } from "./utils.js";
 import { createTray } from "./tray.js";
+import { globalShortcut } from "electron";
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -36,12 +37,28 @@ function createWindow(): BrowserWindow {
 app.whenReady().then(() => {
   const mainWindow = createWindow();
 
+  globalShortcut.register("CommandOrControl+Shift+M", () => {
+    const windows = BrowserWindow.getAllWindows();
+    if (windows.length > 0) {
+      const win = windows[0];
+      if (!win.isMaximized()) {
+        win.maximize();
+      } else {
+        win.unmaximize();
+      }
+    }
+  });
+
   ipcMain.on("minimize", () => {
-    mainWindow.minimize();
+    if (mainWindow) {
+      mainWindow.minimize();
+    }
   });
 
   ipcMain.on("close", () => {
-    mainWindow.close();
+    if (mainWindow) {
+      mainWindow.close();
+    }
   });
 
   ipcMain.on("maximize", () => {
@@ -54,7 +71,15 @@ app.whenReady().then(() => {
     }
   });
 
-  // Add handler for showing menus
+  ipcMain.on("fullscreen", () => {
+    if (mainWindow) {
+      if (!mainWindow.isFullScreen()) {
+        mainWindow.setFullScreen(true);
+      } else {
+        mainWindow.setFullScreen(false);
+      }
+    }
+  });
 
   createTray(mainWindow);
 
@@ -81,5 +106,9 @@ function handleCloseEvents(mainWindow: BrowserWindow) {
 
   mainWindow.on("show", () => {
     willClose = false;
+  });
+
+  app.on("will-quit", () => {
+    globalShortcut.unregisterAll();
   });
 }
