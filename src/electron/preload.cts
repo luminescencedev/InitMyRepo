@@ -58,6 +58,9 @@ contextBridge.exposeInMainWorld("electron", {
   initRepo: async (targetPath: string, repoUrl: string) => {
     return await ipcRenderer.invoke("init-repo", targetPath, repoUrl);
   },
+  openVSCode: async (targetPath: string) => {
+    return await ipcRenderer.invoke("open-vscode", targetPath);
+  },
 });
 
 // Export type for renderer process usage

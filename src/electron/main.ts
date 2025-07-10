@@ -110,6 +110,16 @@ app.whenReady().then(() => {
     return null;
   });
 
+  ipcMain.handle("open-vscode", async (_event, targetPath) => {
+    return new Promise((resolve, reject) => {
+      if (!targetPath) return reject("Missing path");
+      exec("code .", { cwd: targetPath }, (err) => {
+        if (err) return reject("Erreur ouverture VSCode: " + err);
+        resolve("VSCode opened successfully");
+      });
+    });
+  });
+
   ipcMain.handle("init-repo", async (_event, targetPath, repoUrl) => {
     return new Promise((resolve, reject) => {
       if (!targetPath || !repoUrl) return reject("Missing path or repoUrl");
@@ -134,11 +144,8 @@ app.whenReady().then(() => {
               (errCommit) => {
                 if (errCommit)
                   return reject("Erreur commit initial: " + errCommit);
-                // Ouvre VSCode dans le dossier du projet
-                exec("code .", { cwd: targetPath }, (err4) => {
-                  if (err4) return reject("Erreur ouverture VSCode: " + err4);
-                  resolve("OK");
-                });
+                // Ne plus ouvrir VSCode automatiquement
+                resolve("OK");
               }
             );
           });

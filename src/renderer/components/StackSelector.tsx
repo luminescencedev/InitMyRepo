@@ -13,11 +13,11 @@ interface StackSelectorProps {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-  React: <FaReact className="text-cyan-400" size={40} />, // React
-  TypeScript: <SiTypescript className="text-cyan-400" size={40} />, // TypeScript
-  Vite: <TbBrandVite className="text-cyan-400" size={40} />, // Vite
-  Tailwind: <RiTailwindCssFill className="text-cyan-300" size={40} />, // Tailwind
-  Node: <FaNodeJs className="text-cyan-400" size={40} />, // Node.js
+  React: <FaReact className="text-zinc-400" size={40} />, // React
+  TypeScript: <SiTypescript className="text-zinc-400" size={40} />, // TypeScript
+  Vite: <TbBrandVite className="text-zinc-400" size={40} />, // Vite
+  Tailwind: <RiTailwindCssFill className="text-zinc-300" size={40} />, // Tailwind
+  Node: <FaNodeJs className="text-zinc-400" size={40} />, // Node.js
 };
 
 const getIcon = (name: string) => {
@@ -53,12 +53,15 @@ const StackSelector: React.FC<StackSelectorProps> = ({
                 className={cn(
                   "w-20 h-20 flex items-center justify-center rounded-xl border-2 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 shadow-lg outline-none",
                   selected === template.name
-                    ? "border-cyan-400 ring-2 ring-cyan-400/40"
+                    ? "border-zinc-400 ring-2 ring-zinc-400/40"
                     : "border-zinc-700",
-                  "group-hover:shadow-[0_8px_32px_0_rgba(0,180,255,0.18)] group-hover:border-cyan-400",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40"
+                  "group-hover:shadow-[0_8px_32px_0_rgba(113,113,122,0.18)] group-hover:border-zinc-400",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40"
                 )}
-                tabIndex={0} // Only the logo box is focusable
+                tabIndex={0}
+                style={{
+                  boxShadow: "inset 0 2px 8px 0 rgba(113,113,122,0.13)",
+                }}
               >
                 {getIcon(template.name)}
               </div>
@@ -66,7 +69,7 @@ const StackSelector: React.FC<StackSelectorProps> = ({
               <span
                 className={cn(
                   "mt-2 text-sm font-semibold text-zinc-300 text-center max-w-[6rem] truncate transition-all duration-200",
-                  selected === template.name && "text-cyan-300"
+                  selected === template.name && "text-zinc-300"
                 )}
                 title={template.name}
               >
@@ -74,7 +77,7 @@ const StackSelector: React.FC<StackSelectorProps> = ({
               </span>
               <span
                 className={cn(
-                  "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-3 py-1 rounded bg-zinc-900/95 text-cyan-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
+                  "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-3 py-1 rounded bg-zinc-900/95 text-zinc-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
                   "select-none"
                 )}
               >

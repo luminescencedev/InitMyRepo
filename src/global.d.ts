@@ -13,6 +13,7 @@ declare global {
       };
       selectPath: () => Promise<string | null>;
       initRepo: (targetPath: string, repoUrl: string) => Promise<void>;
+      openVSCode: (targetPath: string) => Promise<void>;
     };
   }
 }
