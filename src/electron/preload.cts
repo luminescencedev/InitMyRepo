@@ -38,7 +38,6 @@ contextBridge.exposeInMainWorld("electron", {
         "get-fullscreen-state",
       ];
       if (validChannels.includes(channel as ValidSendChannels)) {
-        console.log(`Sending IPC message: ${channel}`, args);
         ipcRenderer.send(channel, ...args);
       } else {
         console.warn(`Invalid channel: ${channel}`);

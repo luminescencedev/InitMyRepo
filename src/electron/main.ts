@@ -123,33 +123,153 @@ app.whenReady().then(() => {
   ipcMain.handle("init-repo", async (_event, targetPath, repoUrl) => {
     return new Promise((resolve, reject) => {
       if (!targetPath || !repoUrl) return reject("Missing path or repoUrl");
+
+      // Check if directory exists and is accessible
+      try {
+        if (!fs.existsSync(targetPath)) {
+          return reject(`Target directory doesn't exist: ${targetPath}`);
+        }
+
+        // Check if directory is writable
+        fs.accessSync(targetPath, fs.constants.W_OK);
+      } catch (error: unknown) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        return reject(`Cannot access target directory: ${errorMessage}`);
+      }
+
+      // Check if directory is empty
+      const files = fs.readdirSync(targetPath);
+      if (files.length > 0) {
+        // Continue anyway, git clone will fail if directory is not empty
+      }
+
       // Clone repo
       exec(`git clone ${repoUrl} .`, { cwd: targetPath }, (err) => {
         if (err) return reject("Erreur lors du clonage: " + err);
-        // Remove .git
-        fs.rmSync(path.join(targetPath, ".git"), {
-          recursive: true,
-          force: true,
-        });
-        // Re-init git
-        exec(`git init`, { cwd: targetPath }, (err2) => {
-          if (err2) return reject("Erreur git init: " + err2);
-          // Install deps first
-          exec(`npm install`, { cwd: targetPath }, (err3) => {
-            if (err3) return reject("Erreur npm install: " + err3);
-            // Add all files and commit after install
-            exec(
-              `git add . && git commit -m "Initial commit"`,
-              { cwd: targetPath },
-              (errCommit) => {
-                if (errCommit)
-                  return reject("Erreur commit initial: " + errCommit);
-                // Ne plus ouvrir VSCode automatiquement
-                resolve("OK");
-              }
-            );
+
+        try {
+          // Remove .git directory if it exists
+          const gitDir = path.join(targetPath, ".git");
+          if (fs.existsSync(gitDir)) {
+            fs.rmSync(gitDir, {
+              recursive: true,
+              force: true,
+            });
+          }
+
+          // Re-init git
+          exec(`git init`, { cwd: targetPath }, (err2) => {
+            if (err2) return reject("Erreur git init: " + err2);
+
+            // First check if this is a JavaScript/Node project
+            const pkgJsonPath = path.join(targetPath, "package.json");
+            const hasPackageJson = fs.existsSync(pkgJsonPath);
+
+            // Function to finalize with git commit
+            const finalizeWithCommit = () => {
+              exec(
+                `git add . && git commit -m "Initial commit"`,
+                { cwd: targetPath },
+                (errCommit) => {
+                  if (errCommit) {
+                    console.warn(
+                      "Avertissement: commit initial échoué: " + errCommit
+                    );
+                    // Not critical, we continue
+                  }
+                  // Always resolve successfully at this point
+                  resolve("OK");
+                }
+              );
+            };
+
+            // Always finalize with git commit, regardless of npm install success
+            const doFinalCommit = () => {
+              finalizeWithCommit();
+            };
+
+            // Skip npm install completely if no package.json
+            if (!hasPackageJson) {
+              doFinalCommit();
+            } else {
+              // Triple-check if package.json exists to avoid errors
+              fs.access(pkgJsonPath, fs.constants.F_OK, (err) => {
+                if (err) {
+                  // File doesn't exist or can't be accessed despite our previous check
+                  console.warn(
+                    "package.json couldn't be accessed, skipping npm install:",
+                    err
+                  );
+                  doFinalCommit();
+                } else {
+                  // Read file content to make sure it's valid
+                  fs.readFile(pkgJsonPath, "utf8", (readErr, data) => {
+                    if (readErr) {
+                      console.warn(
+                        "Couldn't read package.json content, skipping npm install:",
+                        readErr
+                      );
+                      doFinalCommit();
+                      return;
+                    }
+
+                    try {
+                      // Validate JSON
+                      JSON.parse(data);
+
+                      // Use exec with timeout handling
+                      let npmCompleted = false;
+
+                      // Add timeout to prevent hanging
+                      const npmTimeout = setTimeout(() => {
+                        if (!npmCompleted) {
+                          console.warn(
+                            "npm install took too long, proceeding anyway"
+                          );
+                          npmCompleted = true;
+                          doFinalCommit();
+                        }
+                      }, 60000); // 1 minute timeout
+
+                      exec(
+                        `npm install`,
+                        { cwd: targetPath },
+                        (err3, stdout, stderr) => {
+                          clearTimeout(npmTimeout);
+
+                          // Only proceed if we haven't already due to timeout
+                          if (!npmCompleted) {
+                            npmCompleted = true;
+
+                            if (err3) {
+                              console.warn(
+                                "npm install failed, but continuing:",
+                                err3
+                              );
+                              console.warn("stderr:", stderr);
+                            }
+
+                            doFinalCommit();
+                          }
+                        }
+                      );
+                    } catch (jsonError) {
+                      console.warn(
+                        "Invalid package.json content, skipping npm install:",
+                        jsonError
+                      );
+                      doFinalCommit();
+                    }
+                  });
+                }
+              });
+            }
           });
-        });
+        } catch (error) {
+          console.error("Error during repository initialization:", error);
+          reject(`Error during repository setup: ${error}`);
+        }
       });
     });
   });
