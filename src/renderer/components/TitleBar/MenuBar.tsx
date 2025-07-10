@@ -146,7 +146,7 @@ const MenuBar: React.FC = () => {
           aria-label={hamburgerOpen ? "Fermer le menu" : "Ouvrir le menu"}
           onClick={() => setHamburgerOpen((v) => !v)}
         >
-          <VscMenu className="w-5 h-5 text-zinc-500 transition-all duration-150" />
+          <VscMenu className="w-5 h-5 text-zinc-500 transition-all duration-150 bg-zinc-900 " />
         </button>
         {/* Dropdown du menu hamburger */}
         <MenuDropdown
