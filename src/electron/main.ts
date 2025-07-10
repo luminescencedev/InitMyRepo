@@ -5,6 +5,11 @@ import { createTray } from "./tray.js";
 import { globalShortcut, dialog } from "electron";
 import fs from "fs";
 import { exec } from "child_process";
+import {
+  addFavoriteRepo,
+  removeFavoriteRepo,
+  getFavoriteRepos,
+} from "./userStore.js";
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -118,6 +123,38 @@ app.whenReady().then(() => {
         resolve("VSCode opened successfully");
       });
     });
+  });
+
+  // Handlers for favorite repositories
+  ipcMain.handle("get-favorite-repos", async () => {
+    return getFavoriteRepos();
+  });
+
+  ipcMain.handle(
+    "add-favorite-repo",
+    async (
+      _event,
+      name: string,
+      repoUrl: string,
+      iconType: string = "favorite",
+      color: string = "zinc-400"
+    ) => {
+      try {
+        addFavoriteRepo(name, repoUrl, iconType, color);
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: String(error) };
+      }
+    }
+  );
+
+  ipcMain.handle("remove-favorite-repo", async (_event, name: string) => {
+    try {
+      removeFavoriteRepo(name);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
   });
 
   ipcMain.handle("init-repo", async (_event, targetPath, repoUrl) => {

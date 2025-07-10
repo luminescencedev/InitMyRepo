@@ -1,4 +1,4 @@
-import { ElectronAPI } from "./electron/preload.cts";
+import { ElectronAPI, UserFavorite } from "./electron/preload.cts";
 
 declare global {
   interface Window {
@@ -14,6 +14,17 @@ declare global {
       selectPath: () => Promise<string | null>;
       initRepo: (targetPath: string, repoUrl: string) => Promise<void>;
       openVSCode: (targetPath: string) => Promise<void>;
+      // Favorite repos functions
+      getFavoriteRepos: () => Promise<UserFavorite[]>;
+      addFavoriteRepo: (
+        name: string,
+        repoUrl: string,
+        iconType?: string,
+        color?: string
+      ) => Promise<{ success: boolean; error?: string }>;
+      removeFavoriteRepo: (
+        name: string
+      ) => Promise<{ success: boolean; error?: string }>;
     };
   }
 }

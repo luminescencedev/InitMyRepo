@@ -60,7 +60,37 @@ contextBridge.exposeInMainWorld("electron", {
   openVSCode: async (targetPath: string) => {
     return await ipcRenderer.invoke("open-vscode", targetPath);
   },
+  // Functions for managing favorite repos
+  getFavoriteRepos: async () => {
+    return await ipcRenderer.invoke("get-favorite-repos");
+  },
+  addFavoriteRepo: async (
+    name: string,
+    repoUrl: string,
+    iconType: string = "favorite",
+    color: string = "zinc-400"
+  ) => {
+    return await ipcRenderer.invoke(
+      "add-favorite-repo",
+      name,
+      repoUrl,
+      iconType,
+      color
+    );
+  },
+  removeFavoriteRepo: async (name: string) => {
+    return await ipcRenderer.invoke("remove-favorite-repo", name);
+  },
 });
 
-// Export type for renderer process usage
-export type { ElectronAPI };
+// Extended interface for user-added repo favorites
+interface UserFavorite {
+  name: string;
+  repo: string;
+  userAdded: true;
+  iconType: string; // Icon type identifier
+  color: string; // Color hex code or Tailwind color class
+}
+
+// Export types for renderer process usage
+export type { ElectronAPI, UserFavorite };

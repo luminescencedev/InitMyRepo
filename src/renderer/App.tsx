@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TitleBar from "./components/TitleBar/TitleBar";
 import PathSelector from "./components/PathSelector";
 import StackSelector from "./components/StackSelector";
 import CustomRepoInput from "./components/CustomRepoInput";
 import Notification from "./components/Notification";
+import FavoriteRepoManager from "./components/FavoriteRepoManager";
 import data from "./data.json";
-import { VscArrowRight, VscCode } from "react-icons/vsc";
+import { VscArrowRight, VscCode, VscClose } from "react-icons/vsc";
 import { TbReload } from "react-icons/tb";
+
 import { cn } from "./utils/cn";
+import type { UserFavorite } from "../electron/preload.cts";
 
 function App() {
   const [path, setPath] = useState("");
@@ -20,6 +23,26 @@ function App() {
     "success"
   );
   const [initialized, setInitialized] = useState(false);
+  const [userFavorites, setUserFavorites] = useState<UserFavorite[]>([]);
+  const [showFavoriteManager, setShowFavoriteManager] = useState(false);
+
+  // Load user favorites when component mounts
+  useEffect(() => {
+    loadUserFavorites();
+  }, []);
+
+  // Load user favorites from electron main process
+  const loadUserFavorites = async () => {
+    try {
+      const favorites = await window.electron.getFavoriteRepos();
+      setUserFavorites(favorites);
+    } catch (error) {
+      console.error("Failed to load favorites:", error);
+      setMessage("Failed to load favorites: " + error);
+      setNotificationType("error");
+      setShowNotification(true);
+    }
+  };
 
   const handleInit = async () => {
     setLoading(true);
@@ -27,9 +50,17 @@ function App() {
     setShowNotification(false);
     setInitialized(false);
     let repoUrl = "";
+
     if (selectedStack && selectedStack !== "Custom Repo") {
-      const template = data.templates.find((t) => t.name === selectedStack);
-      repoUrl = template?.repo || "";
+      // Check if it's a user favorite first
+      const userFavorite = userFavorites.find((f) => f.name === selectedStack);
+      if (userFavorite) {
+        repoUrl = userFavorite.repo;
+      } else {
+        // Check built-in templates
+        const template = data.templates.find((t) => t.name === selectedStack);
+        repoUrl = template?.repo || "";
+      }
     } else if (selectedStack === "Custom Repo") {
       repoUrl = customRepo;
     }
@@ -76,6 +107,54 @@ function App() {
     setInitialized(false);
   };
 
+  // Handle adding a favorite repository
+  const handleAddFavorite = async (
+    name: string,
+    repoUrl: string,
+    iconType: string = "favorite",
+    color: string = "zinc-400"
+  ) => {
+    try {
+      const result = await window.electron.addFavoriteRepo(
+        name,
+        repoUrl,
+        iconType,
+        color
+      );
+      if (result.success) {
+        setMessage(`Added ${name} to favorites!`);
+        setNotificationType("success");
+        setShowNotification(true);
+        loadUserFavorites(); // Reload favorites
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setMessage(`Failed to add favorite: ${error}`);
+      setNotificationType("error");
+      setShowNotification(true);
+    }
+  };
+
+  // Handle removing a favorite repository
+  const handleRemoveFavorite = async (name: string) => {
+    try {
+      const result = await window.electron.removeFavoriteRepo(name);
+      if (result.success) {
+        setMessage(`Removed ${name} from favorites`);
+        setNotificationType("success");
+        setShowNotification(true);
+        loadUserFavorites(); // Reload favorites
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setMessage(`Failed to remove favorite: ${error}`);
+      setNotificationType("error");
+      setShowNotification(true);
+    }
+  };
+
   return (
     <>
       <TitleBar />
@@ -97,7 +176,11 @@ function App() {
           <StackSelector
             selected={selectedStack}
             setSelected={setSelectedStack}
+            userFavorites={userFavorites}
+            onAddFavorite={() => setShowFavoriteManager(true)}
+            onRemoveFavorite={handleRemoveFavorite}
           />
+
           {/* Séparateur "or" */}
           <div className="flex items-center w-full my-2">
             <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
@@ -210,6 +293,30 @@ function App() {
         visible={showNotification}
         onClose={() => setShowNotification(false)}
       />
+
+      {/* Favorite manager modal */}
+      {showFavoriteManager && (
+        <div className="fixed inset-0 bg-zinc-900/80 flex items-center justify-center z-50">
+          <div className="bg-zinc-900 border-2 border-zinc-700 rounded-xl p-6 max-w-lg w-full max-h-[80vh] overflow-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-zinc-300 flex items-center gap-2">
+                <span>Add a Favorite Repository</span>
+              </h2>
+              <button
+                onClick={() => setShowFavoriteManager(false)}
+                className="text-zinc-500 hover:text-zinc-300 p-1 rounded-full hover:bg-zinc-800"
+              >
+                <VscClose size={20} />
+              </button>
+            </div>
+            <FavoriteRepoManager
+              userFavorites={userFavorites}
+              onAddFavorite={handleAddFavorite}
+              onRemoveFavorite={handleRemoveFavorite}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
