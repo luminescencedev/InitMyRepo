@@ -124,23 +124,24 @@ app.whenReady().then(() => {
         // Re-init git
         exec(`git init`, { cwd: targetPath }, (err2) => {
           if (err2) return reject("Erreur git init: " + err2);
-          // Add all files and commit
-          exec(
-            `git add . && git commit -m "Initial commit"`,
-            { cwd: targetPath },
-            (errCommit) => {
-              if (errCommit) return reject("Erreur commit initial: " + errCommit);
-              // Install deps
-              exec(`npm install`, { cwd: targetPath }, (err3) => {
-                if (err3) return reject("Erreur npm install: " + err3);
+          // Install deps first
+          exec(`npm install`, { cwd: targetPath }, (err3) => {
+            if (err3) return reject("Erreur npm install: " + err3);
+            // Add all files and commit after install
+            exec(
+              `git add . && git commit -m "Initial commit"`,
+              { cwd: targetPath },
+              (errCommit) => {
+                if (errCommit)
+                  return reject("Erreur commit initial: " + errCommit);
                 // Ouvre VSCode dans le dossier du projet
                 exec("code .", { cwd: targetPath }, (err4) => {
                   if (err4) return reject("Erreur ouverture VSCode: " + err4);
                   resolve("OK");
                 });
-              });
-            }
-          );
+              }
+            );
+          });
         });
       });
     });
