@@ -1,8 +1,4 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { dialog } from "electron";
-import fs from "fs";
-import path from "path";
-import { exec } from "child_process";
 
 // Define valid channels for TypeScript
 type ValidSendChannels =
