@@ -1,8 +1,8 @@
 import React from "react";
 import { cn } from "../utils/cn";
 import data from "../data.json";
-import { FaReact, FaNodeJs } from "react-icons/fa";
-import { SiTypescript } from "react-icons/si";
+import { FaReact, FaNodeJs, FaVuejs } from "react-icons/fa";
+import { SiTypescript, SiExpress } from "react-icons/si";
 import { TbBrandVite } from "react-icons/tb";
 import { RiTailwindCssFill } from "react-icons/ri";
 import { MdFavorite, MdStar, MdBookmark, MdCode } from "react-icons/md";
@@ -86,20 +86,42 @@ const colorOptions: Record<
 };
 
 const iconMap: Record<string, React.ReactNode> = {
-  React: <FaReact className="text-zinc-400" size={40} />, // React
-  TypeScript: <SiTypescript className="text-zinc-400" size={40} />, // TypeScript
+  React: <FaReact className="text-blue-400" size={40} />, // React
+  TypeScript: <SiTypescript className="text-blue-400" size={40} />, // TypeScript
+  Vue: <FaVuejs className="text-green-400" size={40} />, // Vue
+  Express: <SiExpress className="text-yellow-400" size={40} />, // Express
   Vite: <TbBrandVite className="text-zinc-400" size={40} />, // Vite
   Tailwind: <RiTailwindCssFill className="text-zinc-300" size={40} />, // Tailwind
   Node: <FaNodeJs className="text-zinc-400" size={40} />, // Node.js
 };
 
-const getIcon = (name: string) => {
-  if (name.toLowerCase().includes("react")) return iconMap.React;
-  if (name.toLowerCase().includes("typescript")) return iconMap.TypeScript;
-  if (name.toLowerCase().includes("vite")) return iconMap.Vite;
-  if (name.toLowerCase().includes("tailwind")) return iconMap.Tailwind;
-  if (name.toLowerCase().includes("node")) return iconMap.Node;
-  return null;
+const getIcon = (template: { name: string; iconType?: string }) => {
+  // Use iconType if available for built-in templates
+  if (template.iconType) {
+    switch (template.iconType) {
+      case "typescript":
+        return iconMap.TypeScript;
+      case "vue":
+        return iconMap.Vue;
+      case "react":
+        return iconMap.React;
+      case "express":
+        return iconMap.Express;
+      default:
+        return iconMap.TypeScript;
+    }
+  }
+
+  // Fallback to name-based detection for legacy templates
+  const name = template.name.toLowerCase();
+  if (name.includes("react")) return iconMap.React;
+  if (name.includes("vue")) return iconMap.Vue;
+  if (name.includes("express")) return iconMap.Express;
+  if (name.includes("typescript")) return iconMap.TypeScript;
+  if (name.includes("vite")) return iconMap.Vite;
+  if (name.includes("tailwind")) return iconMap.Tailwind;
+  if (name.includes("node")) return iconMap.Node;
+  return iconMap.TypeScript; // Default fallback
 };
 
 // Get icon component for a favorite based on iconType
@@ -207,7 +229,7 @@ const StackSelector: React.FC<StackSelectorProps> = ({
                         (template as UserFavorite).color,
                         window.innerWidth < 640 ? 30 : 40
                       )
-                    : getIcon(template.name)}
+                    : getIcon(template)}
                 </div>
                 {/* Tooltip on hover */}
                 <span

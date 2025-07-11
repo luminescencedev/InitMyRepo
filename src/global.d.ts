@@ -1,4 +1,8 @@
-import { ElectronAPI, UserFavorite } from "./electron/preload.cts";
+import {
+  ElectronAPI,
+  UserFavorite,
+  TemplateData,
+} from "./electron/preload.cts";
 
 declare global {
   interface Window {
@@ -15,7 +19,8 @@ declare global {
       initRepo: (
         targetPath: string,
         repoUrl: string,
-        packageManager?: string
+        packageManager?: string,
+        templateData?: TemplateData
       ) => Promise<void>;
       openVSCode: (targetPath: string) => Promise<void>;
       // Favorite repos functions

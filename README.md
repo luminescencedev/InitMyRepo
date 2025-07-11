@@ -82,12 +82,26 @@ Pour supprimer un favori, survolez-le et cliquez sur l'icône de suppression (×
 
 ## Templates disponibles 📋
 
-InitMyRepo est livré avec quelques templates préinstallés :
+InitMyRepo est livré avec des templates préinstallés optimisés pour différents types de projets :
 
-- **React + Vite + TypeScript + TailwindCSS** : Un template moderne pour le développement frontend
-- **Express + Node.js** : Une configuration de base pour les API et applications backend
+### Templates Frontend (Vite)
 
-Vous pouvez facilement ajouter vos propres templates à la liste des favoris.
+- **React + Vite + TypeScript + TailwindCSS** : Template React moderne avec TypeScript et TailwindCSS
+- **Vue + Vite + TypeScript + TailwindCSS** : Template Vue 3 avec TypeScript et TailwindCSS
+
+### Templates Backend (Express)
+
+- **Express + TypeScript + API** : Serveur Express avec TypeScript pour créer des APIs robustes (sans moteur de vue)
+- **Express + EJS + CSS** : Application Express traditionnelle avec moteur de template EJS
+- **Express + Pug + SASS** : Application Express avec Pug pour les templates et SASS pour le styling
+
+Tous les templates utilisent des outils modernes pour un développement rapide et une maintenance optimale.
+
+**Templates Vite** : Utilisent `create vite` avec installation automatique de TailwindCSS v4 (Vite plugin) et configuration TypeScript. Plus besoin de PostCSS ou Autoprefixer - TailwindCSS v4 est directement intégré comme plugin Vite avec un simple `@import "tailwindcss"`.
+
+**Templates Express** : Utilisent `express-generator` avec support des différents moteurs de vue (EJS, Pug) et preprocesseurs CSS (SASS). Les templates TypeScript incluent une configuration automatique avec les types nécessaires.
+
+Vous pouvez facilement ajouter vos propres templates personnalisés à la liste des favoris.
 
 ## Personnalisation 🎨
 

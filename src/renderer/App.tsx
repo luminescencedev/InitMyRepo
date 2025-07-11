@@ -12,7 +12,12 @@ import { TbReload } from "react-icons/tb";
 import backgroundImage from "/luminescence_dark.png";
 
 import { cn } from "./utils/cn";
-import type { UserFavorite } from "../electron/preload.cts";
+import type {
+  UserFavorite,
+  ViteTemplateData,
+  ExpressTemplateData,
+  TemplateData,
+} from "../electron/preload.cts";
 
 function App() {
   const [path, setPath] = useState("");
@@ -54,6 +59,7 @@ function App() {
     setShowNotification(false);
     setInitialized(false);
     let repoUrl = "";
+    let templateData: TemplateData | undefined = undefined;
 
     if (selectedStack && selectedStack !== "Custom Repo") {
       // Check if it's a user favorite first
@@ -63,12 +69,26 @@ function App() {
       } else {
         // Check built-in templates
         const template = data.templates.find((t) => t.name === selectedStack);
-        repoUrl = template?.repo || "";
+        if (template) {
+          if (template.isViteTemplate) {
+            // For Vite templates, pass template data instead of repo URL
+            templateData = template as ViteTemplateData;
+            repoUrl = ""; // Not needed for Vite templates
+          } else if (template.isExpressTemplate) {
+            // For Express templates, pass template data instead of repo URL
+            templateData = template as ExpressTemplateData;
+            repoUrl = ""; // Not needed for Express templates
+          } else {
+            repoUrl = template.repo || "";
+          }
+        }
       }
     } else if (selectedStack === "Custom Repo") {
       repoUrl = customRepo;
     }
-    if (!path || !repoUrl) {
+
+    // For Vite and Express templates, we don't need repoUrl, only templateData
+    if (!path || (!repoUrl && !templateData)) {
       setMessage("Please select a folder and a template or repo.");
       setNotificationType("error");
       setShowNotification(true);
@@ -79,7 +99,8 @@ function App() {
       await window.electron.initRepo(
         path,
         repoUrl,
-        selectedPackageManager || undefined
+        selectedPackageManager || undefined,
+        templateData
       );
       setMessage(
         `Project initialized successfully${
@@ -194,19 +215,6 @@ function App() {
             onRemoveFavorite={handleRemoveFavorite}
           />
 
-          {/* Séparateur pour package manager */}
-          <div className="flex items-center w-full my-2">
-            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
-            <span className="mx-2 sm:mx-4 text-zinc-400 font-semibold select-none text-xs sm:text-base tracking-wide px-2 sm:px-3 py-1 shadow-sm border-zinc-800">
-              Package Manager
-            </span>
-            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
-          </div>
-          <PackageManagerSelector
-            selected={selectedPackageManager}
-            setSelected={setSelectedPackageManager}
-          />
-
           {/* Séparateur "or" */}
           <div className="flex items-center w-full my-2">
             <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
@@ -247,6 +255,19 @@ function App() {
               <CustomRepoInput value={customRepo} onChange={setCustomRepo} />
             )}
           </div>
+
+          {/* Séparateur pour package manager */}
+          <div className="flex items-center w-full my-2">
+            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
+            <span className="mx-2 sm:mx-4 text-zinc-400 font-semibold select-none text-xs sm:text-base tracking-wide px-2 sm:px-3 py-1 shadow-sm border-zinc-800">
+              Package Manager
+            </span>
+            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
+          </div>
+          <PackageManagerSelector
+            selected={selectedPackageManager}
+            setSelected={setSelectedPackageManager}
+          />
         </div>
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-center mt-6 sm:mt-8">
           <button

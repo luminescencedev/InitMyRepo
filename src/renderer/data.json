@@ -2,15 +2,48 @@
   "templates": [
     {
       "name": "React + Vite + TypeScript + TailwindCSS",
-      "repo": "https://github.com/oluqom/typescript-react-tailwind-vite.git"
+      "isViteTemplate": true,
+      "viteTemplate": "react-ts",
+      "installTailwind": true,
+      "description": "React with TypeScript, Vite and TailwindCSS",
+      "iconType": "typescript"
     },
     {
-      "name": "Express + Node.js",
-      "repo": "https://github.com/subhamchbty/expressjs-template.git"
+      "name": "Vue + Vite + TypeScript + TailwindCSS",
+      "isViteTemplate": true,
+      "viteTemplate": "vue-ts",
+      "installTailwind": true,
+      "description": "Vue 3 with TypeScript, Vite and TailwindCSS",
+      "iconType": "vue"
+    },
+    {
+      "name": "Express + TypeScript + API",
+      "isExpressTemplate": true,
+      "expressOptions": "--no-view",
+      "useTypeScript": true,
+      "description": "Express API server with TypeScript (no view engine)",
+      "iconType": "express"
+    },
+    {
+      "name": "Express + EJS + CSS",
+      "isExpressTemplate": true,
+      "expressOptions": "--view=ejs",
+      "useTypeScript": false,
+      "description": "Express with EJS templating and CSS",
+      "iconType": "express"
+    },
+    {
+      "name": "Express + Pug + SASS",
+      "isExpressTemplate": true,
+      "expressOptions": "--view=pug --css=sass",
+      "useTypeScript": false,
+      "description": "Express with Pug templating and SASS styling",
+      "iconType": "express"
     },
     {
       "name": "Custom Repo",
-      "repo": ""
+      "repo": "",
+      "isViteTemplate": false
     }
   ]
 }

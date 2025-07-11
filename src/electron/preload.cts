@@ -53,13 +53,15 @@ contextBridge.exposeInMainWorld("electron", {
   initRepo: async (
     targetPath: string,
     repoUrl: string,
-    packageManager?: string
+    packageManager?: string,
+    templateData?: TemplateData
   ) => {
     return await ipcRenderer.invoke(
       "init-repo",
       targetPath,
       repoUrl,
-      packageManager
+      packageManager,
+      templateData
     );
   },
   openVSCode: async (targetPath: string) => {
@@ -97,5 +99,32 @@ interface UserFavorite {
   color: string; // Color hex code or Tailwind color class
 }
 
+// Interface for Vite template data
+interface ViteTemplateData {
+  name: string;
+  isViteTemplate: true;
+  viteTemplate: string; // e.g., "react-ts", "vue-ts", etc.
+  installTailwind: boolean;
+  description?: string;
+}
+
+// Interface for Express template data
+interface ExpressTemplateData {
+  name: string;
+  isExpressTemplate: true;
+  expressOptions?: string; // e.g., "--no-view", "--view=ejs", etc.
+  useTypeScript: boolean;
+  description?: string;
+}
+
+// Union type for all template data
+type TemplateData = ViteTemplateData | ExpressTemplateData;
+
 // Export types for renderer process usage
-export type { ElectronAPI, UserFavorite };
+export type {
+  ElectronAPI,
+  UserFavorite,
+  ViteTemplateData,
+  ExpressTemplateData,
+  TemplateData,
+};

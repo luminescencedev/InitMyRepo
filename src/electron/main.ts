@@ -10,6 +10,7 @@ import {
   removeFavoriteRepo,
   getFavoriteRepos,
 } from "./userStore.js";
+import type { TemplateData } from "./preload.cts";
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -43,6 +44,9 @@ function createWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   const mainWindow = createWindow();
+
+  createTray(mainWindow);
+  handleCloseEvents(mainWindow);
 
   globalShortcut.register("CommandOrControl+Shift+M", () => {
     const windows = BrowserWindow.getAllWindows();
@@ -159,9 +163,17 @@ app.whenReady().then(() => {
 
   ipcMain.handle(
     "init-repo",
-    async (_event, targetPath, repoUrl, packageManager) => {
+    async (
+      _event,
+      targetPath: string,
+      repoUrl: string,
+      packageManager: string,
+      templateData: TemplateData
+    ) => {
       return new Promise((resolve, reject) => {
-        if (!targetPath || !repoUrl) return reject("Missing path or repoUrl");
+        if (!targetPath || (!repoUrl && !templateData)) {
+          return reject("Missing path or repoUrl/templateData");
+        }
 
         // Check if directory exists and is accessible
         try {
@@ -180,167 +192,493 @@ app.whenReady().then(() => {
         // Check if directory is empty
         const files = fs.readdirSync(targetPath);
         if (files.length > 0) {
-          // Continue anyway, git clone will fail if directory is not empty
+          // Continue anyway, commands will handle non-empty directories
         }
 
-        // Clone repo
-        exec(`git clone ${repoUrl} .`, { cwd: targetPath }, (err) => {
-          if (err) return reject("Erreur lors du clonage: " + err);
+        // Function to finalize with git commit
+        const finalizeWithCommit = () => {
+          exec(
+            `git add . && git commit -m "Initial commit"`,
+            { cwd: targetPath },
+            (errCommit) => {
+              if (errCommit) {
+                console.warn(
+                  "Avertissement: commit initial échoué: " + errCommit
+                );
+                // Not critical, we continue
+              }
+              // Always resolve successfully at this point
+              resolve("OK");
+            }
+          );
+        };
 
-          try {
-            // Remove .git directory if it exists
-            const gitDir = path.join(targetPath, ".git");
-            if (fs.existsSync(gitDir)) {
-              fs.rmSync(gitDir, {
-                recursive: true,
-                force: true,
+        // Function to install dependencies after project creation
+        const installDependencies = (additionalDeps?: string[]) => {
+          const pkgJsonPath = path.join(targetPath, "package.json");
+
+          if (!fs.existsSync(pkgJsonPath)) {
+            finalizeWithCommit();
+            return;
+          }
+
+          // Determine which package manager to use
+          let installCommand = "npm install"; // default
+          let addCommand = "npm install"; // for additional deps
+
+          if (packageManager) {
+            switch (packageManager.toLowerCase()) {
+              case "yarn":
+                installCommand = "yarn install";
+                addCommand = "yarn add";
+                break;
+              case "pnpm":
+                installCommand = "pnpm install";
+                addCommand = "pnpm add";
+                break;
+              case "bun":
+                installCommand = "bun install";
+                addCommand = "bun add";
+                break;
+              default:
+                installCommand = "npm install";
+                addCommand = "npm install";
+            }
+          }
+
+          // Install additional dependencies first if needed
+          const installAdditional = () => {
+            if (additionalDeps && additionalDeps.length > 0) {
+              const additionalInstallCmd = `${addCommand} ${additionalDeps.join(
+                " "
+              )}`;
+              console.log(
+                "Installing additional dependencies:",
+                additionalInstallCmd
+              );
+
+              exec(additionalInstallCmd, { cwd: targetPath }, (errAdd) => {
+                if (errAdd) {
+                  console.warn(
+                    "Additional dependencies install failed:",
+                    errAdd
+                  );
+                }
+                // Continue with main install regardless
+                mainInstall();
               });
+            } else {
+              mainInstall();
+            }
+          };
+
+          // Main dependency installation
+          const mainInstall = () => {
+            let installCompleted = false;
+
+            const installTimeout = setTimeout(() => {
+              if (!installCompleted) {
+                console.warn(
+                  `${
+                    packageManager || "npm"
+                  } install took too long, proceeding anyway`
+                );
+                installCompleted = true;
+                finalizeWithCommit();
+              }
+            }, 60000); // 1 minute timeout
+
+            exec(
+              installCommand,
+              { cwd: targetPath },
+              (err3, stdout, stderr) => {
+                clearTimeout(installTimeout);
+
+                if (!installCompleted) {
+                  installCompleted = true;
+
+                  if (err3) {
+                    console.warn(
+                      `${
+                        packageManager || "npm"
+                      } install failed, but continuing:`,
+                      err3
+                    );
+                    console.warn("stderr:", stderr);
+                  }
+
+                  finalizeWithCommit();
+                }
+              }
+            );
+          };
+
+          installAdditional();
+        };
+
+        // Check if this is a Vite template
+        if (
+          templateData &&
+          "isViteTemplate" in templateData &&
+          templateData.isViteTemplate
+        ) {
+          // Use create vite for built-in Vite templates
+          const projectName = path.basename(targetPath);
+          const parentDir = path.dirname(targetPath);
+
+          // Determine create command based on package manager
+          let createCommand = `npm create vite@latest ${projectName} -- --template ${templateData.viteTemplate}`;
+
+          if (packageManager) {
+            switch (packageManager.toLowerCase()) {
+              case "yarn":
+                createCommand = `yarn create vite ${projectName} --template ${templateData.viteTemplate}`;
+                break;
+              case "pnpm":
+                createCommand = `pnpm create vite ${projectName} --template ${templateData.viteTemplate}`;
+                break;
+              case "bun":
+                createCommand = `bun create vite ${projectName} --template ${templateData.viteTemplate}`;
+                break;
+            }
+          }
+
+          console.log("Creating Vite project with command:", createCommand);
+
+          // Create the Vite project in parent directory
+          exec(createCommand, { cwd: parentDir }, (err, stdout, stderr) => {
+            if (err) {
+              console.error("Vite creation error:", err);
+              console.error("stderr:", stderr);
+              return reject("Erreur lors de la création Vite: " + err);
             }
 
-            // Re-init git
-            exec(`git init`, { cwd: targetPath }, (err2) => {
-              if (err2) return reject("Erreur git init: " + err2);
+            console.log("Vite project created successfully");
 
-              // First check if this is a JavaScript/Node project
-              const pkgJsonPath = path.join(targetPath, "package.json");
-              const hasPackageJson = fs.existsSync(pkgJsonPath);
+            try {
+              // Initialize git
+              exec(`git init`, { cwd: targetPath }, (err2) => {
+                if (err2) {
+                  console.warn("Git init failed:", err2);
+                }
 
-              // Function to finalize with git commit
-              const finalizeWithCommit = () => {
-                exec(
-                  `git add . && git commit -m "Initial commit"`,
-                  { cwd: targetPath },
-                  (errCommit) => {
-                    if (errCommit) {
-                      console.warn(
-                        "Avertissement: commit initial échoué: " + errCommit
-                      );
-                      // Not critical, we continue
+                // Install additional dependencies if needed (like Tailwind)
+                if (templateData.installTailwind) {
+                  console.log("Installing TailwindCSS with Vite plugin...");
+
+                  // Determine install command for TailwindCSS v4 with Vite plugin
+                  let tailwindInstallCommand =
+                    "npm install tailwindcss @tailwindcss/vite";
+                  if (packageManager) {
+                    switch (packageManager.toLowerCase()) {
+                      case "yarn":
+                        tailwindInstallCommand =
+                          "yarn add tailwindcss @tailwindcss/vite";
+                        break;
+                      case "pnpm":
+                        tailwindInstallCommand =
+                          "pnpm add tailwindcss @tailwindcss/vite";
+                        break;
+                      case "bun":
+                        tailwindInstallCommand =
+                          "bun add tailwindcss @tailwindcss/vite";
+                        break;
                     }
-                    // Always resolve successfully at this point
-                    resolve("OK");
                   }
-                );
-              };
 
-              // Always finalize with git commit, regardless of package install success
-              const doFinalCommit = () => {
-                finalizeWithCommit();
-              };
-
-              // Skip package install completely if no package.json
-              if (!hasPackageJson) {
-                doFinalCommit();
-              } else {
-                // Triple-check if package.json exists to avoid errors
-                fs.access(pkgJsonPath, fs.constants.F_OK, (err) => {
-                  if (err) {
-                    // File doesn't exist or can't be accessed despite our previous check
-                    console.warn(
-                      "package.json couldn't be accessed, skipping package install:",
-                      err
-                    );
-                    doFinalCommit();
-                  } else {
-                    // Read file content to make sure it's valid
-                    fs.readFile(pkgJsonPath, "utf8", (readErr, data) => {
-                      if (readErr) {
+                  exec(
+                    tailwindInstallCommand,
+                    { cwd: targetPath },
+                    (tailwindErr) => {
+                      if (tailwindErr) {
                         console.warn(
-                          "Couldn't read package.json content, skipping package install:",
-                          readErr
+                          "TailwindCSS installation failed:",
+                          tailwindErr
                         );
-                        doFinalCommit();
-                        return;
-                      }
+                        finalizeWithCommit();
+                      } else {
+                        console.log("TailwindCSS installed successfully");
 
-                      try {
-                        // Validate JSON
-                        JSON.parse(data);
-
-                        // Determine which package manager to use
-                        let installCommand = "npm install"; // default
-                        if (packageManager) {
-                          switch (packageManager.toLowerCase()) {
-                            case "yarn":
-                              installCommand = "yarn install";
-                              break;
-                            case "pnpm":
-                              installCommand = "pnpm install";
-                              break;
-                            case "bun":
-                              installCommand = "bun install";
-                              break;
-                            default:
-                              installCommand = "npm install";
-                          }
-                        }
-
-                        // Use exec with timeout handling
-                        let installCompleted = false;
-
-                        // Add timeout to prevent hanging
-                        const installTimeout = setTimeout(() => {
-                          if (!installCompleted) {
+                        // Update vite.config.ts to include TailwindCSS plugin
+                        const viteConfigPath = path.join(
+                          targetPath,
+                          "vite.config.ts"
+                        );
+                        fs.readFile(viteConfigPath, "utf8", (readErr, data) => {
+                          if (readErr) {
                             console.warn(
-                              `${
-                                packageManager || "npm"
-                              } install took too long, proceeding anyway`
+                              "Could not read vite.config.ts:",
+                              readErr
                             );
-                            installCompleted = true;
-                            doFinalCommit();
+                            finalizeWithCommit();
+                            return;
                           }
-                        }, 60000); // 1 minute timeout
 
-                        exec(
-                          installCommand,
-                          { cwd: targetPath },
-                          (err3, stdout, stderr) => {
-                            clearTimeout(installTimeout);
+                          // Add TailwindCSS import and plugin
+                          let updatedConfig = data;
 
-                            // Only proceed if we haven't already due to timeout
-                            if (!installCompleted) {
-                              installCompleted = true;
+                          // Add import if not present
+                          if (!updatedConfig.includes("@tailwindcss/vite")) {
+                            updatedConfig = updatedConfig.replace(
+                              "import { defineConfig } from 'vite'",
+                              "import { defineConfig } from 'vite'\nimport tailwindcss from '@tailwindcss/vite'"
+                            );
+                          }
 
-                              if (err3) {
+                          // Add plugin to plugins array
+                          if (updatedConfig.includes("plugins: [")) {
+                            // Add to existing plugins array
+                            updatedConfig = updatedConfig.replace(
+                              /plugins:\s*\[(.*?)\]/s,
+                              (match, plugins) => {
+                                const trimmedPlugins = plugins.trim();
+                                if (
+                                  trimmedPlugins &&
+                                  !trimmedPlugins.endsWith(",")
+                                ) {
+                                  return `plugins: [${trimmedPlugins}, tailwindcss()]`;
+                                } else {
+                                  return `plugins: [${trimmedPlugins}tailwindcss()]`;
+                                }
+                              }
+                            );
+                          } else {
+                            // Add plugins array
+                            updatedConfig = updatedConfig.replace(
+                              "export default defineConfig({",
+                              "export default defineConfig({\n  plugins: [tailwindcss()],"
+                            );
+                          }
+
+                          fs.writeFile(
+                            viteConfigPath,
+                            updatedConfig,
+                            (writeErr) => {
+                              if (writeErr) {
                                 console.warn(
-                                  `${
-                                    packageManager || "npm"
-                                  } install failed, but continuing:`,
-                                  err3
+                                  "Failed to update vite.config.ts:",
+                                  writeErr
                                 );
-                                console.warn("stderr:", stderr);
+                              } else {
+                                console.log(
+                                  "Vite config updated with TailwindCSS plugin"
+                                );
                               }
 
-                              doFinalCommit();
+                              // Update CSS file to use new @import syntax
+                              const cssPath = path.join(
+                                targetPath,
+                                "src",
+                                "index.css"
+                              );
+                              const tailwindCSS = `@import "tailwindcss";\n`;
+
+                              fs.writeFile(
+                                cssPath,
+                                tailwindCSS,
+                                (cssWriteErr) => {
+                                  if (cssWriteErr) {
+                                    console.warn(
+                                      "Failed to create Tailwind CSS file:",
+                                      cssWriteErr
+                                    );
+                                  } else {
+                                    console.log(
+                                      "TailwindCSS setup completed with @import"
+                                    );
+                                  }
+                                  finalizeWithCommit();
+                                }
+                              );
                             }
+                          );
+                        });
+                      }
+                    }
+                  );
+                } else {
+                  finalizeWithCommit();
+                }
+              });
+            } catch (error) {
+              console.error("Error during Vite project setup:", error);
+              reject(`Error during Vite project setup: ${error}`);
+            }
+          });
+        } else if (
+          templateData &&
+          "isExpressTemplate" in templateData &&
+          templateData.isExpressTemplate
+        ) {
+          // Use express-generator for Express templates
+          const projectName = path.basename(targetPath);
+          const parentDir = path.dirname(targetPath);
+
+          // Determine express-generator command based on package manager
+          let createCommand = `npx express-generator${
+            templateData.expressOptions ? ` ${templateData.expressOptions}` : ""
+          } ${projectName}`;
+
+          if (packageManager) {
+            switch (packageManager.toLowerCase()) {
+              case "yarn":
+                createCommand = `yarn create express-generator${
+                  templateData.expressOptions
+                    ? ` ${templateData.expressOptions}`
+                    : ""
+                } ${projectName}`;
+                break;
+              case "pnpm":
+                createCommand = `pnpm dlx express-generator${
+                  templateData.expressOptions
+                    ? ` ${templateData.expressOptions}`
+                    : ""
+                } ${projectName}`;
+                break;
+              case "bun":
+                createCommand = `bunx express-generator${
+                  templateData.expressOptions
+                    ? ` ${templateData.expressOptions}`
+                    : ""
+                } ${projectName}`;
+                break;
+            }
+          }
+
+          console.log("Creating Express project with command:", createCommand);
+
+          // Create the Express project in parent directory
+          exec(createCommand, { cwd: parentDir }, (err, stdout, stderr) => {
+            if (err) {
+              console.error("Express creation error:", err);
+              console.error("stderr:", stderr);
+              return reject("Erreur lors de la création Express: " + err);
+            }
+
+            console.log("Express project created successfully");
+
+            try {
+              // Initialize git
+              exec(`git init`, { cwd: targetPath }, (err2) => {
+                if (err2) {
+                  console.warn("Git init failed:", err2);
+                }
+
+                // Install TypeScript support if needed
+                if (templateData.useTypeScript) {
+                  console.log("Setting up TypeScript for Express...");
+
+                  // Determine install command for TypeScript
+                  let typescriptInstallCommand =
+                    "npm install -D typescript @types/node @types/express ts-node nodemon";
+                  if (packageManager) {
+                    switch (packageManager.toLowerCase()) {
+                      case "yarn":
+                        typescriptInstallCommand =
+                          "yarn add -D typescript @types/node @types/express ts-node nodemon";
+                        break;
+                      case "pnpm":
+                        typescriptInstallCommand =
+                          "pnpm add -D typescript @types/node @types/express ts-node nodemon";
+                        break;
+                      case "bun":
+                        typescriptInstallCommand =
+                          "bun add -D typescript @types/node @types/express ts-node nodemon";
+                        break;
+                    }
+                  }
+
+                  exec(
+                    typescriptInstallCommand,
+                    { cwd: targetPath },
+                    (tsErr) => {
+                      if (tsErr) {
+                        console.warn("TypeScript installation failed:", tsErr);
+                        finalizeWithCommit();
+                      } else {
+                        console.log("TypeScript installed successfully");
+
+                        // Create tsconfig.json
+                        const tsConfig = {
+                          compilerOptions: {
+                            target: "ES2020",
+                            module: "commonjs",
+                            lib: ["ES2020"],
+                            outDir: "./dist",
+                            rootDir: "./src",
+                            strict: true,
+                            moduleResolution: "node",
+                            esModuleInterop: true,
+                            skipLibCheck: true,
+                            forceConsistentCasingInFileNames: true,
+                            resolveJsonModule: true,
+                          },
+                          include: ["src/**/*"],
+                          exclude: ["node_modules", "dist"],
+                        };
+
+                        fs.writeFile(
+                          path.join(targetPath, "tsconfig.json"),
+                          JSON.stringify(tsConfig, null, 2),
+                          (writeErr) => {
+                            if (writeErr) {
+                              console.warn(
+                                "Failed to create tsconfig.json:",
+                                writeErr
+                              );
+                            } else {
+                              console.log("TypeScript configuration created");
+                            }
+                            finalizeWithCommit();
                           }
                         );
-                      } catch (jsonError) {
-                        console.warn(
-                          `Invalid package.json content, skipping ${
-                            packageManager || "npm"
-                          } install:`,
-                          jsonError
-                        );
-                        doFinalCommit();
                       }
-                    });
-                  }
+                    }
+                  );
+                } else {
+                  // Just install dependencies and finalize
+                  installDependencies();
+                }
+              });
+            } catch (error) {
+              console.error("Error during Express project setup:", error);
+              reject(`Error during Express project setup: ${error}`);
+            }
+          });
+        } else {
+          // Use git clone for custom repos and non-Vite templates
+          if (!repoUrl) {
+            return reject("Repository URL required for non-Vite templates");
+          }
+
+          exec(`git clone ${repoUrl} .`, { cwd: targetPath }, (err) => {
+            if (err) return reject("Erreur lors du clonage: " + err);
+
+            try {
+              // Remove .git directory if it exists
+              const gitDir = path.join(targetPath, ".git");
+              if (fs.existsSync(gitDir)) {
+                fs.rmSync(gitDir, {
+                  recursive: true,
+                  force: true,
                 });
               }
-            });
-          } catch (error) {
-            console.error("Error during repository initialization:", error);
-            reject(`Error during repository setup: ${error}`);
-          }
-        });
+
+              // Re-init git
+              exec(`git init`, { cwd: targetPath }, (err2) => {
+                if (err2) return reject("Erreur git init: " + err2);
+
+                installDependencies();
+              });
+            } catch (error) {
+              console.error("Error during repository initialization:", error);
+              reject(`Error during repository setup: ${error}`);
+            }
+          });
+        }
       });
     }
   );
-
-  createTray(mainWindow);
-
-  handleCloseEvents(mainWindow);
 });
 
 function handleCloseEvents(mainWindow: BrowserWindow) {
