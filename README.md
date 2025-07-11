@@ -1,54 +1,140 @@
-# React + TypeScript + Vite
+# InitMyRepo 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<div align="center">
+  <img src="luminescence_icon.png" alt="InitMyRepo Logo" width="200" height="auto"/>
+  <br>
+  <p>
+    <strong>Un gestionnaire de templates de projets élégant et efficace</strong>
+  </p>
+  <p>
+    <a href="#fonctionnalités-">Fonctionnalités</a> •
+    <a href="#installation-">Installation</a> •
+    <a href="#utilisation-%EF%B8%8F">Utilisation</a> •
+    <a href="#templates-disponibles-">Templates disponibles</a> •
+    <a href="#personnalisation-">Personnalisation</a>
+  </p>
+</div>
 
-Currently, two official plugins are available:
+## Présentation 📝
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**InitMyRepo** est une application desktop élégante développée avec Electron et React qui permet d'initialiser rapidement des projets à partir de templates prédéfinis ou personnalisés. Fini les longues commandes git clone et la configuration manuelle de projets !
 
-## Expanding the ESLint configuration
+Avec son interface utilisateur intuitive et moderne, InitMyRepo vous permet de :
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Sélectionner un dossier de destination
+- Choisir parmi une liste de templates préinstallés
+- Ajouter et gérer vos propres templates favoris
+- Initialiser des projets depuis n'importe quel dépôt Git
+- Ouvrir directement le projet dans Visual Studio Code
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Fonctionnalités 🌟
+
+- 🎯 **Sélection facile** : Choisissez un dossier de destination en un clic
+- 📚 **Templates préinstallés** : Accédez à des templates prêts à l'emploi
+- ⭐ **Gestion des favoris** : Ajoutez, personnalisez et supprimez vos propres templates
+- 🔄 **Désélection par toggle** : Annulez facilement votre sélection en recliquant sur un choix
+- 🖥️ **Intégration VS Code** : Ouvrez directement votre projet dans l'éditeur
+- 🎨 **UI responsive** : Interface adaptée à toutes les tailles de fenêtre
+
+## Installation 📦
+
+### Prérequis
+
+- [Git](https://git-scm.com/) installé sur votre machine
+- [Node.js](https://nodejs.org/) (version 14.0.0 ou supérieure)
+- [npm](https://www.npmjs.com/) (généralement installé avec Node.js)
+- [VS Code](https://code.visualstudio.com/) (recommandé, mais optionnel)
+
+### Téléchargement
+
+1. Téléchargez la dernière version depuis la [page des releases](https://github.com/luminescencedev/InitMyRepo/releases)
+2. Extrayez l'archive et lancez le programme d'installation
+3. Suivez les instructions d'installation
+
+## Utilisation ⚙️
+
+### Étape 1: Sélectionnez un dossier de destination
+
+Cliquez sur "Select your project folder" pour choisir l'emplacement où votre projet sera initialisé.
+
+### Étape 2: Choisissez un template
+
+Deux options s'offrent à vous :
+
+1. **Templates préinstallés ou favoris** : Cliquez sur une des icônes dans la section "Templates & Favorites".
+2. **Dépôt personnalisé** : Cliquez sur "Custom repository" et saisissez l'URL d'un dépôt Git.
+
+> 💡 **Astuce** : Vous pouvez annuler votre sélection en cliquant à nouveau sur le template choisi
+
+### Étape 3: Initialisez le projet
+
+1. Cliquez sur le bouton "Init" pour démarrer l'initialisation
+2. Une notification vous informera lorsque l'opération sera terminée
+3. Cliquez sur "Open VSCode" pour ouvrir le projet dans VS Code
+
+### Gestion des favoris
+
+1. Cliquez sur "Add Favorite" dans la section des templates
+2. Renseignez un nom, l'URL du dépôt Git, et personnalisez l'icône et la couleur
+3. Cliquez sur "Save Favorite"
+
+Pour supprimer un favori, survolez-le et cliquez sur l'icône de suppression (×).
+
+## Templates disponibles 📋
+
+InitMyRepo est livré avec quelques templates préinstallés :
+
+- **React + Vite + TypeScript + TailwindCSS** : Un template moderne pour le développement frontend
+- **Express + Node.js** : Une configuration de base pour les API et applications backend
+
+Vous pouvez facilement ajouter vos propres templates à la liste des favoris.
+
+## Personnalisation 🎨
+
+### Ajout de favoris personnalisés
+
+Vous pouvez personnaliser vos templates favoris avec :
+
+- Un nom descriptif
+- Une URL de dépôt Git
+- Une icône à choisir parmi plusieurs options
+- Une couleur distinctive pour retrouver facilement vos templates
+
+## Développement 👨‍💻
+
+InitMyRepo est construit avec les technologies suivantes :
+
+- [Electron](https://www.electronjs.org/) - Framework pour applications desktop
+- [React](https://reactjs.org/) + [TypeScript](https://www.typescriptlang.org/) - Interface utilisateur
+- [TailwindCSS](https://tailwindcss.com/) - Styling
+- [Vite](https://vitejs.dev/) - Build tool
+
+### Installation pour le développement
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/luminescencedev/InitMyRepo.git
+
+# Accéder au répertoire du projet
+cd InitMyRepo
+
+# Installer les dépendances
+npm install
+
+# Lancer en mode développement
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Contributions
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou soumettre une pull request.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## Licence
+
+[MIT](LICENSE) © Luminescence Dev
+
+---
+
+<div align="center">
+  <p>Créé avec ❤️ par <a href="https://github.com/luminescencedev">Luminescence Dev</a></p>
+</div>
