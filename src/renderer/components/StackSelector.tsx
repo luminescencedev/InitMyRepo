@@ -16,12 +16,6 @@ import {
 } from "react-icons/vsc";
 import type { UserFavorite } from "../../electron/preload.cts";
 
-interface StackSelectorProps {
-  selected: string;
-  setSelected: (name: string) => void;
-  userFavorites?: UserFavorite[];
-}
-
 // Available icons for favorites
 const iconOptions: Record<
   string,
@@ -144,9 +138,13 @@ const StackSelector: React.FC<StackSelectorProps> = ({
   ];
 
   return (
-    <div className={cn("flex flex-col items-center w-full max-w-2xl gap-4")}>
+    <div
+      className={cn(
+        "flex flex-col items-center w-full max-w-2xl gap-3 sm:gap-4"
+      )}
+    >
       <div className="flex justify-between w-full items-center mb-2">
-        <h3 className="text-zinc-300 font-medium flex items-center gap-2">
+        <h3 className="text-zinc-300 font-medium flex items-center gap-2 text-sm sm:text-base">
           <span>Templates & Favorites</span>
         </h3>
         {onAddFavorite && (
@@ -163,14 +161,22 @@ const StackSelector: React.FC<StackSelectorProps> = ({
         )}
       </div>
 
-      <div className="w-full flex flex-wrap justify-center gap-6">
+      <div className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
         {allTemplates.map((template) => {
           const isFavorite = "userAdded" in template;
           return (
             <div key={template.name} className="relative group">
+              {" "}
               <button
                 type="button"
-                onClick={() => setSelected(template.name)}
+                onClick={() => {
+                  // Toggle selection on/off when clicking the same template
+                  if (selected === template.name) {
+                    setSelected("");
+                  } else {
+                    setSelected(template.name);
+                  }
+                }}
                 className={cn(
                   "flex flex-col items-center group",
                   "transition-all duration-200"
@@ -179,7 +185,7 @@ const StackSelector: React.FC<StackSelectorProps> = ({
               >
                 <div
                   className={cn(
-                    "w-20 h-20 flex items-center justify-center rounded-xl border-2 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 shadow-lg outline-none",
+                    "w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center rounded-xl border-2 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 shadow-lg outline-none",
                     selected === template.name
                       ? "border-zinc-400 ring-2 ring-zinc-400/40"
                       : "border-zinc-700",
@@ -199,14 +205,14 @@ const StackSelector: React.FC<StackSelectorProps> = ({
                     ? getFavoriteIcon(
                         (template as UserFavorite).iconType,
                         (template as UserFavorite).color,
-                        40
+                        window.innerWidth < 640 ? 30 : 40
                       )
                     : getIcon(template.name)}
                 </div>
                 {/* Tooltip on hover */}
                 <span
                   className={cn(
-                    "mt-2 text-sm font-semibold text-zinc-300 text-center max-w-[6rem] truncate transition-all duration-200",
+                    "mt-2 text-xs sm:text-sm font-semibold text-zinc-300 text-center max-w-[5rem] sm:max-w-[6rem] truncate transition-all duration-200",
                     selected === template.name && "text-zinc-300",
                     isFavorite &&
                       (colorOptions[(template as UserFavorite).color]?.class ||
@@ -218,15 +224,13 @@ const StackSelector: React.FC<StackSelectorProps> = ({
                 </span>
                 <span
                   className={cn(
-                    "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-3 py-1 rounded bg-zinc-900/95 text-zinc-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
+                    "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-2 sm:px-3 py-1 rounded bg-zinc-900/95 text-zinc-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
                     "select-none"
                   )}
                 >
                   {template.name}
-                  {isFavorite}
                 </span>
               </button>
-
               {/* Remove button for favorites */}
               {isFavorite && onRemoveFavorite && (
                 <button

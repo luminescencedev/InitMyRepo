@@ -34,23 +34,23 @@ const Notification: React.FC<NotificationProps> = ({
   return (
     <div
       className={cn(
-        "fixed bottom-4 right-4 z-50 flex items-center rounded-lg shadow-lg border border-zinc-700 py-3 px-4 pr-10 min-w-[300px] animate-slide-in-right",
+        "fixed bottom-4 right-4 z-50 flex items-center rounded-lg shadow-lg border border-zinc-700 py-2 sm:py-3 px-3 sm:px-4 pr-8 sm:pr-10 min-w-[250px] sm:min-w-[300px] max-w-[calc(100vw-32px)] sm:max-w-md animate-slide-in-right",
         type === "success"
           ? "bg-zinc-900/95 text-zinc-100 border-l-4 border-l-green-500"
           : "bg-zinc-900/95 text-zinc-100 border-l-4 border-l-red-500"
       )}
     >
-      <div className={cn("mr-3 flex-shrink-0")}>
+      <div className={cn("mr-2 sm:mr-3 flex-shrink-0")}>
         {type === "success" ? (
-          <VscCheckAll className="h-6 w-6 text-green-400" />
+          <VscCheckAll className="h-5 w-5 sm:h-6 sm:w-6 text-green-400" />
         ) : (
-          <VscError className="h-6 w-6 text-red-400" />
+          <VscError className="h-5 w-5 sm:h-6 sm:w-6 text-red-400" />
         )}
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <p
           className={cn(
-            "text-sm font-medium",
+            "text-xs sm:text-sm font-medium truncate",
             type === "success" ? "text-zinc-100" : "text-zinc-200"
           )}
         >
@@ -66,7 +66,7 @@ const Notification: React.FC<NotificationProps> = ({
       >
         <span className="sr-only">Close</span>
         <svg
-          className="h-4 w-4 text-zinc-400"
+          className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

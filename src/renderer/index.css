@@ -6,9 +6,27 @@
   --color-focus-outline: oklch(60% 0 0 / 0.5);
 }
 
+html,
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
+  overflow-x: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow-y: auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 @keyframes slideInRight {
@@ -50,4 +68,98 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 120, 130, 0.18) transparent;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  /* Adjust focus outline for smaller screens */
+  :focus-visible {
+    outline-width: 1px;
+  }
+}
+
+/* Ensure content is properly spaced on small devices */
+@media (max-height: 600px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  /* Add specific styles for small heights */
+  .content-container {
+    padding-top: 45px;
+    padding-bottom: 20px;
+    margin-top: 0;
+    justify-content: flex-start;
+  }
+
+  /* Reduce vertical spacing */
+  .gap-6 {
+    gap: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 0.5rem;
+  }
+
+  .my-2 {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Make buttons smaller on small height screens */
+  button {
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+  }
+}
+
+/* Add smooth transitions for responsive adjustments */
+.content-container,
+.gap-4,
+.gap-6,
+.my-2 {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Adjustments for very small screens (height) */
+@media (max-height: 500px) {
+  .pt-12 {
+    padding-top: 2.5rem;
+  }
+
+  .h-9 {
+    height: 2rem;
+  }
+
+  .content-container {
+    padding-top: 2.25rem;
+  }
+
+  /* More compact styling */
+  .my-2 {
+    margin-top: 0.125rem;
+    margin-bottom: 0.125rem;
+  }
+
+  /* Further reduce vertical spacing */
+  .gap-3 {
+    gap: 0.5rem;
+  }
+
+  .py-3,
+  .py-4 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+/* Always ensure the content is accessible */
+.min-h-screen {
+  min-height: 100vh;
+  height: auto;
 }

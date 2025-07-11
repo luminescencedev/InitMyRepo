@@ -137,17 +137,17 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
   };
 
   return (
-    <div className={cn("w-full flex flex-col gap-4")}>
+    <div className={cn("w-full flex flex-col gap-3 sm:gap-4")}>
       {/* Add new favorite form */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:gap-3">
         {error && (
-          <div className="text-red-400 text-sm py-2 px-3 bg-red-400/10 border border-red-400/30 rounded-lg">
+          <div className="text-red-400 text-xs sm:text-sm py-2 px-3 bg-red-400/10 border border-red-400/30 rounded-lg">
             {error}
           </div>
         )}
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="favName" className="text-zinc-400 text-sm">
+          <label htmlFor="favName" className="text-zinc-400 text-xs sm:text-sm">
             Template name:
           </label>
           <input
@@ -157,14 +157,14 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
             onChange={(e) => setNewFavoriteName(e.target.value)}
             placeholder="My favorite template"
             className={cn(
-              "w-full rounded-lg border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 placeholder-zinc-500",
+              "w-full rounded-lg border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 placeholder-zinc-500 text-sm sm:text-base",
               "focus:outline-none focus:ring-2 focus:ring-zinc-400/40 focus:border-zinc-600"
             )}
           />
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="favUrl" className="text-zinc-400 text-sm">
+          <label htmlFor="favUrl" className="text-zinc-400 text-xs sm:text-sm">
             Repository URL:
           </label>
           <input
@@ -174,7 +174,7 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
             onChange={(e) => setNewFavoriteUrl(e.target.value)}
             placeholder="https://github.com/user/repo.git"
             className={cn(
-              "w-full rounded-lg border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 placeholder-zinc-500",
+              "w-full rounded-lg border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-zinc-200 placeholder-zinc-500 text-sm sm:text-base",
               "focus:outline-none focus:ring-2 focus:ring-zinc-400/40 focus:border-zinc-600"
             )}
           />
@@ -182,8 +182,8 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
 
         {/* Icon Selection */}
         <div className="flex flex-col gap-1">
-          <label className="text-zinc-400 text-sm">Icon:</label>
-          <div className="grid grid-cols-4 gap-2">
+          <label className="text-zinc-400 text-xs sm:text-sm">Icon:</label>
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
             {Object.entries(iconOptions).map(
               ([key, { component: Icon, label }]) => (
                 <button
@@ -191,7 +191,7 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
                   type="button"
                   onClick={() => setSelectedIconType(key)}
                   className={cn(
-                    "flex flex-col items-center justify-center p-2 rounded-lg border-2",
+                    "flex flex-col items-center justify-center p-1 sm:p-2 rounded-lg border-2",
                     selectedIconType === key
                       ? cn(
                           "border-zinc-500 bg-zinc-800",
@@ -206,9 +206,11 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
                         ? colorOptions[selectedColor].class
                         : "text-zinc-400"
                     )}
-                    size={20}
+                    size={window.innerWidth < 640 ? 16 : 20}
                   />
-                  <span className="text-xs mt-1 text-zinc-400">{label}</span>
+                  <span className="text-[10px] sm:text-xs mt-1 text-zinc-400">
+                    {label}
+                  </span>
                 </button>
               )
             )}
@@ -217,22 +219,24 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
 
         {/* Color Selection */}
         <div className="flex flex-col gap-1">
-          <label className="text-zinc-400 text-sm">Color:</label>
-          <div className="grid grid-cols-4 gap-2">
-            {Object.entries(colorOptions).map(([key, { class: label }]) => (
+          <label className="text-zinc-400 text-xs sm:text-sm">Color:</label>
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
+            {Object.entries(colorOptions).map(([key, { label }]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setSelectedColor(key)}
                 className={cn(
-                  "flex items-center justify-center py-2 rounded-lg border-2",
+                  "flex items-center justify-center py-1 sm:py-2 rounded-lg border-2",
                   selectedColor === key
                     ? "border-zinc-500 bg-zinc-800"
                     : "border-zinc-700 bg-zinc-900 hover:border-zinc-600",
                   colorOptions[key].bgClass
                 )}
               >
-                <span className="text-xs text-zinc-400">{label}</span>
+                <span className="text-[10px] sm:text-xs text-zinc-400">
+                  {label}
+                </span>
               </button>
             ))}
           </div>
@@ -241,7 +245,7 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
         <button
           onClick={handleAddNewFavorite}
           className={cn(
-            "w-full mt-2 rounded-lg border-2 border-zinc-700 bg-zinc-900 py-2 text-zinc-200",
+            "w-full mt-1 sm:mt-2 rounded-lg border-2 border-zinc-700 bg-zinc-900 py-2 text-zinc-200 text-sm sm:text-base",
             "hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-200",
             "focus:outline-none focus:ring-2 focus:ring-zinc-400/40"
           )}
@@ -252,17 +256,17 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
 
       {/* List of current favorites */}
       {userFavorites.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-semibold text-zinc-300 mb-3">
+        <div className="mt-3 sm:mt-4">
+          <h3 className="font-semibold text-zinc-300 mb-2 sm:mb-3 text-sm sm:text-base">
             Current Favorites
           </h3>
-          <div className="grid grid-cols-1 gap-2 max-h-[30vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 gap-1 sm:gap-2 max-h-[30vh] overflow-y-auto pr-1">
             {userFavorites.map((favorite) => (
               <div
                 key={favorite.name}
                 className="flex items-center justify-between p-2 border border-zinc-700 rounded-lg bg-zinc-900"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* Display the favorite's icon */}
                   <div
                     className={cn(
@@ -279,16 +283,16 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
                             colorOptions[favorite.color]?.class ||
                             "text-zinc-400"
                           }
-                          size={20}
+                          size={window.innerWidth < 640 ? 16 : 20}
                         />
                       );
                     })()}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-zinc-200 font-medium">
+                    <span className="text-zinc-200 font-medium text-xs sm:text-sm">
                       {favorite.name}
                     </span>
-                    <span className="text-zinc-500 text-xs truncate max-w-64">
+                    <span className="text-zinc-500 text-[10px] sm:text-xs truncate max-w-[calc(100vw-150px)] sm:max-w-64">
                       {favorite.repo}
                     </span>
                   </div>
@@ -301,7 +305,7 @@ const FavoriteRepoManager: React.FC<FavoriteRepoManagerProps> = ({
                   )}
                   aria-label={`Remove ${favorite.name}`}
                 >
-                  <VscClose size={16} />
+                  <VscClose size={window.innerWidth < 640 ? 14 : 16} />
                 </button>
               </div>
             ))}
