@@ -50,8 +50,17 @@ contextBridge.exposeInMainWorld("electron", {
     // Use IPC to main process for dialog
     return await ipcRenderer.invoke("select-path");
   },
-  initRepo: async (targetPath: string, repoUrl: string) => {
-    return await ipcRenderer.invoke("init-repo", targetPath, repoUrl);
+  initRepo: async (
+    targetPath: string,
+    repoUrl: string,
+    packageManager?: string
+  ) => {
+    return await ipcRenderer.invoke(
+      "init-repo",
+      targetPath,
+      repoUrl,
+      packageManager
+    );
   },
   openVSCode: async (targetPath: string) => {
     return await ipcRenderer.invoke("open-vscode", targetPath);

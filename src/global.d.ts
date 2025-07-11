@@ -12,7 +12,11 @@ declare global {
         ) => void;
       };
       selectPath: () => Promise<string | null>;
-      initRepo: (targetPath: string, repoUrl: string) => Promise<void>;
+      initRepo: (
+        targetPath: string,
+        repoUrl: string,
+        packageManager?: string
+      ) => Promise<void>;
       openVSCode: (targetPath: string) => Promise<void>;
       // Favorite repos functions
       getFavoriteRepos: () => Promise<UserFavorite[]>;

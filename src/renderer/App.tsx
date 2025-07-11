@@ -3,6 +3,7 @@ import TitleBar from "./components/TitleBar/TitleBar";
 import PathSelector from "./components/PathSelector";
 import StackSelector from "./components/StackSelector";
 import CustomRepoInput from "./components/CustomRepoInput";
+import PackageManagerSelector from "./components/PackageManagerSelector";
 import Notification from "./components/Notification";
 import FavoriteRepoManager from "./components/FavoriteRepoManager";
 import data from "./data.json";
@@ -16,6 +17,8 @@ import type { UserFavorite } from "../electron/preload.cts";
 function App() {
   const [path, setPath] = useState("");
   const [selectedStack, setSelectedStack] = useState<string>("");
+  const [selectedPackageManager, setSelectedPackageManager] =
+    useState<string>("");
   const [customRepo, setCustomRepo] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -73,8 +76,16 @@ function App() {
       return;
     }
     try {
-      await window.electron.initRepo(path, repoUrl);
-      setMessage("Project initialized successfully!");
+      await window.electron.initRepo(
+        path,
+        repoUrl,
+        selectedPackageManager || undefined
+      );
+      setMessage(
+        `Project initialized successfully${
+          selectedPackageManager ? ` with ${selectedPackageManager}` : ""
+        }!`
+      );
       setNotificationType("success");
       setShowNotification(true);
       setInitialized(true);
@@ -102,6 +113,7 @@ function App() {
   const handleReload = () => {
     setPath("");
     setSelectedStack("");
+    setSelectedPackageManager("");
     setCustomRepo("");
     setMessage("");
     setShowNotification(false);
@@ -180,6 +192,19 @@ function App() {
             userFavorites={userFavorites}
             onAddFavorite={() => setShowFavoriteManager(true)}
             onRemoveFavorite={handleRemoveFavorite}
+          />
+
+          {/* Séparateur pour package manager */}
+          <div className="flex items-center w-full my-2">
+            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
+            <span className="mx-2 sm:mx-4 text-zinc-400 font-semibold select-none text-xs sm:text-base tracking-wide px-2 sm:px-3 py-1 shadow-sm border-zinc-800">
+              Package Manager
+            </span>
+            <div className="flex-grow border-t-2 border-zinc-800 rounded-full"></div>
+          </div>
+          <PackageManagerSelector
+            selected={selectedPackageManager}
+            setSelected={setSelectedPackageManager}
           />
 
           {/* Séparateur "or" */}
