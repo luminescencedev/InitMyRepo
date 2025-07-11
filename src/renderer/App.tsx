@@ -8,6 +8,7 @@ import FavoriteRepoManager from "./components/FavoriteRepoManager";
 import data from "./data.json";
 import { VscArrowRight, VscCode, VscClose } from "react-icons/vsc";
 import { TbReload } from "react-icons/tb";
+import backgroundImage from "/luminescence_dark.png";
 
 import { cn } from "./utils/cn";
 import type { UserFavorite } from "../electron/preload.cts";
@@ -160,7 +161,7 @@ function App() {
       <TitleBar />
       <div
         className={cn(
-          "w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 overflow-y-auto py-4 pt-10 sm:pt-12 flex-1 min-h-0"
+          "w-full flex flex-col justify-center items-center px-4 sm:px-6 md:px-8 overflow-y-auto py-4 pt-10 sm:pt-12 flex-1 min-h-0 z-1"
         )}
       >
         <div className="w-full max-w-2xl flex flex-col items-center gap-3 sm:gap-5 content-container mt-0 sm:mt-2">
@@ -283,12 +284,12 @@ function App() {
       </div>
       <div
         className={cn(
-          "fixed left-0 top-0 h-full w-full flex justify-center items-center -z-10 pointer-events-none"
+          "fixed left-0 top-0 h-full w-full flex justify-center items-center z-0 pointer-events-none"
         )}
       >
         <img
-          src="/luminescence_dark.png"
-          alt=""
+          src={backgroundImage}
+          alt="Background"
           className="max-w-full max-h-full object-contain opacity-90"
         />
       </div>
