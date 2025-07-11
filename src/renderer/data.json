@@ -1,6 +1,11 @@
 {
   "templates": [
     {
+      "name": "Custom Repo",
+      "repo": "",
+      "isViteTemplate": false
+    },
+    {
       "name": "React + Vite + TypeScript + TailwindCSS",
       "isViteTemplate": true,
       "viteTemplate": "react-ts",
@@ -17,33 +22,20 @@
       "iconType": "vue"
     },
     {
-      "name": "Express + TypeScript + API",
-      "isExpressTemplate": true,
-      "expressOptions": "--no-view",
-      "useTypeScript": true,
-      "description": "Express API server with TypeScript (no view engine)",
-      "iconType": "express"
-    },
-    {
-      "name": "Express + EJS + CSS",
+      "name": "Express + EJS (Fast Setup)",
       "isExpressTemplate": true,
       "expressOptions": "--view=ejs",
       "useTypeScript": false,
-      "description": "Express with EJS templating and CSS",
+      "description": "Express with EJS templating (JavaScript - fast setup)",
       "iconType": "express"
     },
     {
-      "name": "Express + Pug + SASS",
+      "name": "Express + API Only (Fast Setup)",
       "isExpressTemplate": true,
-      "expressOptions": "--view=pug --css=sass",
+      "expressOptions": "--no-view",
       "useTypeScript": false,
-      "description": "Express with Pug templating and SASS styling",
+      "description": "Express API server (JavaScript - fast setup for REST/GraphQL)",
       "iconType": "express"
-    },
-    {
-      "name": "Custom Repo",
-      "repo": "",
-      "isViteTemplate": false
     }
   ]
 }

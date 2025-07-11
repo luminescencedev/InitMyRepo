@@ -26,22 +26,16 @@ bunx express-generator my-app
 
 ### Available Express Templates
 
-1. **Express + TypeScript + API**
-
-   - Command: `npx express-generator --no-view my-app`
-   - Includes: TypeScript setup, API-focused (no view engine)
-   - Auto-installs: `typescript`, `@types/node`, `@types/express`, `ts-node`, `nodemon`
-
-2. **Express + EJS + CSS**
+1. **Express + EJS (Fast Setup)**
 
    - Command: `npx express-generator --view=ejs my-app`
-   - Includes: EJS templating, traditional CSS
-   - Standard Express setup with views
+   - Includes: EJS templating, JavaScript (no TypeScript setup needed)
+   - Fast setup for web applications with server-side rendering
 
-3. **Express + Pug + SASS**
-   - Command: `npx express-generator --view=pug --css=sass my-app`
-   - Includes: Pug templating, SASS preprocessing
-   - Modern styling with Pug templates
+2. **Express + API Only (Fast Setup)**
+   - Command: `npx express-generator --no-view my-app`
+   - Includes: JavaScript API server (no view engine, no TypeScript setup)
+   - Perfect for REST APIs and GraphQL servers with minimal configuration
 
 ## Technical Implementation
 
@@ -49,22 +43,23 @@ bunx express-generator my-app
 
 ```json
 {
-  "name": "Express + TypeScript + API",
+  "name": "Express + EJS (Fast Setup)",
   "isExpressTemplate": true,
-  "expressOptions": "--no-view",
-  "useTypeScript": true,
-  "description": "Express API server with TypeScript (no view engine)",
+  "expressOptions": "--view=ejs",
+  "useTypeScript": false,
+  "description": "Express with EJS templating (JavaScript - fast setup)",
   "iconType": "express"
 }
 ```
 
 ### TypeScript Support
 
-For templates with `useTypeScript: true`:
+Templates now use JavaScript for faster setup:
 
-- Automatically installs TypeScript dependencies
-- Creates `tsconfig.json` with Node.js configuration
-- Sets up development workflow with `ts-node` and `nodemon`
+- No TypeScript dependencies to install
+- No `tsconfig.json` creation needed
+- Standard Express.js workflow
+- Much faster initialization (10-20 seconds vs 45-90 seconds)
 
 ### Package Manager Support
 

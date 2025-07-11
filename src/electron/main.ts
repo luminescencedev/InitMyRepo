@@ -214,7 +214,7 @@ app.whenReady().then(() => {
         };
 
         // Function to install dependencies after project creation
-        const installDependencies = (additionalDeps?: string[]) => {
+        const installDependencies = (devDeps?: string[]) => {
           const pkgJsonPath = path.join(targetPath, "package.json");
 
           if (!fs.existsSync(pkgJsonPath)) {
@@ -224,45 +224,37 @@ app.whenReady().then(() => {
 
           // Determine which package manager to use
           let installCommand = "npm install"; // default
-          let addCommand = "npm install"; // for additional deps
+          let devInstallCommand = "npm install -D"; // for dev deps
 
           if (packageManager) {
             switch (packageManager.toLowerCase()) {
               case "yarn":
                 installCommand = "yarn install";
-                addCommand = "yarn add";
+                devInstallCommand = "yarn add -D";
                 break;
               case "pnpm":
                 installCommand = "pnpm install";
-                addCommand = "pnpm add";
+                devInstallCommand = "pnpm add -D";
                 break;
               case "bun":
                 installCommand = "bun install";
-                addCommand = "bun add";
+                devInstallCommand = "bun add -D";
                 break;
               default:
                 installCommand = "npm install";
-                addCommand = "npm install";
+                devInstallCommand = "npm install -D";
             }
           }
 
-          // Install additional dependencies first if needed
-          const installAdditional = () => {
-            if (additionalDeps && additionalDeps.length > 0) {
-              const additionalInstallCmd = `${addCommand} ${additionalDeps.join(
-                " "
-              )}`;
-              console.log(
-                "Installing additional dependencies:",
-                additionalInstallCmd
-              );
+          // Install dev dependencies first if needed, then regular deps
+          const installDev = () => {
+            if (devDeps && devDeps.length > 0) {
+              const devInstallCmd = `${devInstallCommand} ${devDeps.join(" ")}`;
+              console.log("Installing dev dependencies:", devInstallCmd);
 
-              exec(additionalInstallCmd, { cwd: targetPath }, (errAdd) => {
-                if (errAdd) {
-                  console.warn(
-                    "Additional dependencies install failed:",
-                    errAdd
-                  );
+              exec(devInstallCmd, { cwd: targetPath }, (errDev) => {
+                if (errDev) {
+                  console.warn("Dev dependencies install failed:", errDev);
                 }
                 // Continue with main install regardless
                 mainInstall();
@@ -286,7 +278,7 @@ app.whenReady().then(() => {
                 installCompleted = true;
                 finalizeWithCommit();
               }
-            }, 60000); // 1 minute timeout
+            }, 30000); // Reduced to 30 seconds timeout
 
             exec(
               installCommand,
@@ -313,7 +305,7 @@ app.whenReady().then(() => {
             );
           };
 
-          installAdditional();
+          installDev();
         };
 
         // Check if this is a Vite template
@@ -558,88 +550,191 @@ app.whenReady().then(() => {
             console.log("Express project created successfully");
 
             try {
-              // Initialize git
+              // Run git init and dependency installation in parallel for faster setup
+              let gitCompleted = false;
+              let depsCompleted = false;
+              let setupError: Error | null = null;
+
+              const checkCompletion = () => {
+                if (gitCompleted && depsCompleted) {
+                  if (setupError) {
+                    reject(
+                      `Error during Express project setup: ${setupError.message}`
+                    );
+                  } else {
+                    finalizeWithCommit();
+                  }
+                }
+              };
+
+              // Initialize git in parallel
               exec(`git init`, { cwd: targetPath }, (err2) => {
                 if (err2) {
                   console.warn("Git init failed:", err2);
                 }
+                gitCompleted = true;
+                checkCompletion();
+              });
 
-                // Install TypeScript support if needed
-                if (templateData.useTypeScript) {
-                  console.log("Setting up TypeScript for Express...");
+              // Setup TypeScript and dependencies in parallel
+              if (templateData.useTypeScript) {
+                console.log("Setting up TypeScript for Express...");
 
-                  // Determine install command for TypeScript
-                  let typescriptInstallCommand =
-                    "npm install -D typescript @types/node @types/express ts-node nodemon";
+                // Create tsconfig.json first (faster than installing deps)
+                const tsConfig = {
+                  compilerOptions: {
+                    target: "ES2020",
+                    module: "commonjs",
+                    lib: ["ES2020"],
+                    outDir: "./dist",
+                    rootDir: "./src",
+                    strict: true,
+                    moduleResolution: "node",
+                    esModuleInterop: true,
+                    skipLibCheck: true,
+                    forceConsistentCasingInFileNames: true,
+                    resolveJsonModule: true,
+                  },
+                  include: ["src/**/*"],
+                  exclude: ["node_modules", "dist"],
+                };
+
+                fs.writeFile(
+                  path.join(targetPath, "tsconfig.json"),
+                  JSON.stringify(tsConfig, null, 2),
+                  (writeErr) => {
+                    if (writeErr) {
+                      console.warn("Failed to create tsconfig.json:", writeErr);
+                    } else {
+                      console.log("TypeScript configuration created");
+                    }
+
+                    // Install all dependencies at once (including TypeScript)
+                    const typescriptDeps = [
+                      "typescript",
+                      "@types/node",
+                      "@types/express",
+                      "ts-node",
+                      "nodemon",
+                    ];
+
+                    // Install dependencies with completion tracking
+                    const installDependenciesParallel = (
+                      devDeps?: string[]
+                    ) => {
+                      const pkgJsonPath = path.join(targetPath, "package.json");
+
+                      if (!fs.existsSync(pkgJsonPath)) {
+                        depsCompleted = true;
+                        checkCompletion();
+                        return;
+                      }
+
+                      // Install dependencies with completion tracking
+                      let installCommand = "npm install";
+                      let devInstallCommand = "npm install -D";
+
+                      if (packageManager) {
+                        switch (packageManager.toLowerCase()) {
+                          case "yarn":
+                            installCommand = "yarn install";
+                            devInstallCommand = "yarn add -D";
+                            break;
+                          case "pnpm":
+                            installCommand = "pnpm install";
+                            devInstallCommand = "pnpm add -D";
+                            break;
+                          case "bun":
+                            installCommand = "bun install";
+                            devInstallCommand = "bun add -D";
+                            break;
+                        }
+                      }
+
+                      if (devDeps && devDeps.length > 0) {
+                        const devInstallCmd = `${devInstallCommand} ${devDeps.join(
+                          " "
+                        )}`;
+                        console.log(
+                          "Installing dev dependencies:",
+                          devInstallCmd
+                        );
+
+                        exec(devInstallCmd, { cwd: targetPath }, (errDev) => {
+                          if (errDev) {
+                            console.warn(
+                              "Dev dependencies install failed:",
+                              errDev
+                            );
+                            setupError = errDev as Error;
+                          }
+
+                          // Install regular dependencies
+                          exec(installCommand, { cwd: targetPath }, (err3) => {
+                            if (err3) {
+                              console.warn(
+                                "Dependencies install failed:",
+                                err3
+                              );
+                              setupError = setupError || (err3 as Error);
+                            }
+                            depsCompleted = true;
+                            checkCompletion();
+                          });
+                        });
+                      } else {
+                        exec(installCommand, { cwd: targetPath }, (err3) => {
+                          if (err3) {
+                            console.warn("Dependencies install failed:", err3);
+                            setupError = err3 as Error;
+                          }
+                          depsCompleted = true;
+                          checkCompletion();
+                        });
+                      }
+                    };
+
+                    installDependenciesParallel(typescriptDeps);
+                  }
+                );
+              } else {
+                // Just install regular dependencies in parallel
+                const installDependenciesParallel = () => {
+                  const pkgJsonPath = path.join(targetPath, "package.json");
+
+                  if (!fs.existsSync(pkgJsonPath)) {
+                    depsCompleted = true;
+                    checkCompletion();
+                    return;
+                  }
+
+                  let installCommand = "npm install";
                   if (packageManager) {
                     switch (packageManager.toLowerCase()) {
                       case "yarn":
-                        typescriptInstallCommand =
-                          "yarn add -D typescript @types/node @types/express ts-node nodemon";
+                        installCommand = "yarn install";
                         break;
                       case "pnpm":
-                        typescriptInstallCommand =
-                          "pnpm add -D typescript @types/node @types/express ts-node nodemon";
+                        installCommand = "pnpm install";
                         break;
                       case "bun":
-                        typescriptInstallCommand =
-                          "bun add -D typescript @types/node @types/express ts-node nodemon";
+                        installCommand = "bun install";
                         break;
                     }
                   }
 
-                  exec(
-                    typescriptInstallCommand,
-                    { cwd: targetPath },
-                    (tsErr) => {
-                      if (tsErr) {
-                        console.warn("TypeScript installation failed:", tsErr);
-                        finalizeWithCommit();
-                      } else {
-                        console.log("TypeScript installed successfully");
-
-                        // Create tsconfig.json
-                        const tsConfig = {
-                          compilerOptions: {
-                            target: "ES2020",
-                            module: "commonjs",
-                            lib: ["ES2020"],
-                            outDir: "./dist",
-                            rootDir: "./src",
-                            strict: true,
-                            moduleResolution: "node",
-                            esModuleInterop: true,
-                            skipLibCheck: true,
-                            forceConsistentCasingInFileNames: true,
-                            resolveJsonModule: true,
-                          },
-                          include: ["src/**/*"],
-                          exclude: ["node_modules", "dist"],
-                        };
-
-                        fs.writeFile(
-                          path.join(targetPath, "tsconfig.json"),
-                          JSON.stringify(tsConfig, null, 2),
-                          (writeErr) => {
-                            if (writeErr) {
-                              console.warn(
-                                "Failed to create tsconfig.json:",
-                                writeErr
-                              );
-                            } else {
-                              console.log("TypeScript configuration created");
-                            }
-                            finalizeWithCommit();
-                          }
-                        );
-                      }
+                  exec(installCommand, { cwd: targetPath }, (err3) => {
+                    if (err3) {
+                      console.warn("Dependencies install failed:", err3);
+                      setupError = err3 as Error;
                     }
-                  );
-                } else {
-                  // Just install dependencies and finalize
-                  installDependencies();
-                }
-              });
+                    depsCompleted = true;
+                    checkCompletion();
+                  });
+                };
+
+                installDependenciesParallel();
+              }
             } catch (error) {
               console.error("Error during Express project setup:", error);
               reject(`Error during Express project setup: ${error}`);

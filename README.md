@@ -91,9 +91,8 @@ InitMyRepo est livré avec des templates préinstallés optimisés pour différe
 
 ### Templates Backend (Express)
 
-- **Express + TypeScript + API** : Serveur Express avec TypeScript pour créer des APIs robustes (sans moteur de vue)
-- **Express + EJS + CSS** : Application Express traditionnelle avec moteur de template EJS
-- **Express + Pug + SASS** : Application Express avec Pug pour les templates et SASS pour le styling
+- **Express + EJS (Fast Setup)** : Serveur Express avec templating EJS pour les vues (JavaScript - configuration rapide)
+- **Express + API Only (Fast Setup)** : Serveur Express API pur pour REST/GraphQL (JavaScript - configuration rapide)
 
 Tous les templates utilisent des outils modernes pour un développement rapide et une maintenance optimale.
 
