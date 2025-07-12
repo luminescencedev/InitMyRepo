@@ -1,7 +1,7 @@
 {
   "name": "initmyrepo",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "A tool to initialize repositories with customizable tech stacks",
   "author": "Luminescence",
   "homepage": "https://github.com/luminescencedev/InitMyRepo",
