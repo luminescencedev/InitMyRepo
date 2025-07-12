@@ -1,11 +1,22 @@
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import TitleBar from "./components/TitleBar/TitleBar";
 import PathSelector from "./components/PathSelector";
 import StackSelector from "./components/StackSelector";
 import CustomRepoInput from "./components/CustomRepoInput";
 import PackageManagerSelector from "./components/PackageManagerSelector";
 import Notification from "./components/Notification";
-import FavoriteRepoManager from "./components/FavoriteRepoManager";
+
+// Lazy load FavoriteRepoManager since it's only used in modal
+const FavoriteRepoManager = lazy(
+  () => import("./components/FavoriteRepoManager")
+);
 import data from "./data.json";
 import { VscArrowRight, VscCode, VscClose } from "react-icons/vsc";
 import { TbReload } from "react-icons/tb";
@@ -35,13 +46,8 @@ function App() {
   const [userFavorites, setUserFavorites] = useState<UserFavorite[]>([]);
   const [showFavoriteManager, setShowFavoriteManager] = useState(false);
 
-  // Load user favorites when component mounts
-  useEffect(() => {
-    loadUserFavorites();
-  }, []);
-
   // Load user favorites from electron main process
-  const loadUserFavorites = async () => {
+  const loadUserFavorites = useCallback(async () => {
     try {
       const favorites = await window.electron.getFavoriteRepos();
       setUserFavorites(favorites);
@@ -51,9 +57,14 @@ function App() {
       setNotificationType("error");
       setShowNotification(true);
     }
-  };
+  }, []);
 
-  const handleInit = async () => {
+  // Load user favorites when component mounts
+  useEffect(() => {
+    loadUserFavorites();
+  }, [loadUserFavorites]);
+
+  const handleInit = useCallback(async () => {
     setLoading(true);
     setMessage("");
     setShowNotification(false);
@@ -116,9 +127,9 @@ function App() {
       setShowNotification(true);
     }
     setLoading(false);
-  };
+  }, [path, selectedStack, selectedPackageManager, customRepo, userFavorites]);
 
-  const handleOpenVSCode = async () => {
+  const handleOpenVSCode = useCallback(async () => {
     try {
       await window.electron.openVSCode(path);
       setMessage("VSCode opened successfully!");
@@ -129,9 +140,9 @@ function App() {
       setNotificationType("error");
       setShowNotification(true);
     }
-  };
+  }, [path]);
 
-  const handleReload = () => {
+  const handleReload = useCallback(() => {
     setPath("");
     setSelectedStack("");
     setSelectedPackageManager("");
@@ -139,55 +150,61 @@ function App() {
     setMessage("");
     setShowNotification(false);
     setInitialized(false);
-  };
+  }, []);
 
   // Handle adding a favorite repository
-  const handleAddFavorite = async (
-    name: string,
-    repoUrl: string,
-    iconType: string = "favorite",
-    color: string = "zinc-400"
-  ) => {
-    try {
-      const result = await window.electron.addFavoriteRepo(
-        name,
-        repoUrl,
-        iconType,
-        color
-      );
-      if (result.success) {
-        setMessage(`Added ${name} to favorites!`);
-        setNotificationType("success");
+  const handleAddFavorite = useCallback(
+    async (
+      name: string,
+      repoUrl: string,
+      iconType: string = "favorite",
+      color: string = "zinc-400"
+    ) => {
+      try {
+        const result = await window.electron.addFavoriteRepo(
+          name,
+          repoUrl,
+          iconType,
+          color
+        );
+        if (result.success) {
+          setMessage(`Added ${name} to favorites!`);
+          setNotificationType("success");
+          setShowNotification(true);
+          loadUserFavorites(); // Reload favorites
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        setMessage(`Failed to add favorite: ${error}`);
+        setNotificationType("error");
         setShowNotification(true);
-        loadUserFavorites(); // Reload favorites
-      } else {
-        throw new Error(result.error);
       }
-    } catch (error) {
-      setMessage(`Failed to add favorite: ${error}`);
-      setNotificationType("error");
-      setShowNotification(true);
-    }
-  };
+    },
+    [loadUserFavorites]
+  );
 
   // Handle removing a favorite repository
-  const handleRemoveFavorite = async (name: string) => {
-    try {
-      const result = await window.electron.removeFavoriteRepo(name);
-      if (result.success) {
-        setMessage(`Removed ${name} from favorites`);
-        setNotificationType("success");
+  const handleRemoveFavorite = useCallback(
+    async (name: string) => {
+      try {
+        const result = await window.electron.removeFavoriteRepo(name);
+        if (result.success) {
+          setMessage(`Removed ${name} from favorites`);
+          setNotificationType("success");
+          setShowNotification(true);
+          loadUserFavorites(); // Reload favorites
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        setMessage(`Failed to remove favorite: ${error}`);
+        setNotificationType("error");
         setShowNotification(true);
-        loadUserFavorites(); // Reload favorites
-      } else {
-        throw new Error(result.error);
       }
-    } catch (error) {
-      setMessage(`Failed to remove favorite: ${error}`);
-      setNotificationType("error");
-      setShowNotification(true);
-    }
-  };
+    },
+    [loadUserFavorites]
+  );
 
   return (
     <>
@@ -333,11 +350,16 @@ function App() {
           "fixed left-0 top-0 h-full w-full flex justify-center items-center z-0 pointer-events-none"
         )}
       >
-        <img
-          src={backgroundImage}
-          alt="Background"
-          className="max-w-full max-h-full object-contain opacity-90"
-        />
+        {useMemo(
+          () => (
+            <img
+              src={backgroundImage}
+              alt="Background"
+              className="max-w-full max-h-full object-contain opacity-90"
+            />
+          ),
+          []
+        )}
       </div>
 
       {/* Notification component */}
@@ -363,11 +385,17 @@ function App() {
                 <VscClose size={20} />
               </button>
             </div>
-            <FavoriteRepoManager
-              userFavorites={userFavorites}
-              onAddFavorite={handleAddFavorite}
-              onRemoveFavorite={handleRemoveFavorite}
-            />
+            <Suspense
+              fallback={
+                <div className="text-zinc-400 text-center py-4">Loading...</div>
+              }
+            >
+              <FavoriteRepoManager
+                userFavorites={userFavorites}
+                onAddFavorite={handleAddFavorite}
+                onRemoveFavorite={handleRemoveFavorite}
+              />
+            </Suspense>
           </div>
         </div>
       )}

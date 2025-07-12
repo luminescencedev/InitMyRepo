@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { cn } from "../utils/cn";
 import data from "../data.json";
 import { FaReact, FaNodeJs, FaVuejs } from "react-icons/fa";
@@ -146,134 +146,148 @@ interface StackSelectorProps {
   onRemoveFavorite?: (name: string) => void;
 }
 
-const StackSelector: React.FC<StackSelectorProps> = ({
-  selected,
-  setSelected,
-  userFavorites = [],
-  onAddFavorite,
-  onRemoveFavorite,
-}) => {
-  // Combine built-in templates with user favorites
-  const allTemplates = [
-    ...data.templates.filter((t) => t.name !== "Custom Repo"),
-    ...userFavorites,
-  ];
+const StackSelector: React.FC<StackSelectorProps> = React.memo(
+  ({
+    selected,
+    setSelected,
+    userFavorites = [],
+    onAddFavorite,
+    onRemoveFavorite,
+  }) => {
+    // Combine built-in templates with user favorites - memoized for performance
+    const allTemplates = useMemo(
+      () => [
+        ...data.templates.filter((t) => t.name !== "Custom Repo"),
+        ...userFavorites,
+      ],
+      [userFavorites]
+    );
 
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-center w-full max-w-2xl gap-3 sm:gap-4"
-      )}
-    >
-      <div className="flex justify-between w-full items-center mb-2">
-        <h3 className="text-zinc-300 font-medium flex items-center gap-2 text-sm sm:text-base">
-          <span>Templates & Favorites</span>
-        </h3>
-        {onAddFavorite && (
-          <button
-            onClick={onAddFavorite}
-            className={cn(
-              "flex items-center gap-1 py-1 px-2 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-300 hover:border-zinc-600 text-xs",
-              "focus:outline-none focus:ring-2 focus:ring-zinc-400/40"
-            )}
-          >
-            <VscAdd size={14} />
-            <span>Add Favorite</span>
-          </button>
+    // Memoize click handler to prevent unnecessary re-renders
+    const handleTemplateClick = useCallback(
+      (templateName: string) => {
+        // Toggle selection on/off when clicking the same template
+        if (selected === templateName) {
+          setSelected("");
+        } else {
+          setSelected(templateName);
+        }
+      },
+      [selected, setSelected]
+    );
+
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center w-full max-w-2xl gap-3 sm:gap-4"
         )}
-      </div>
-
-      <div className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
-        {allTemplates.map((template) => {
-          const isFavorite = "userAdded" in template;
-          return (
-            <div key={template.name} className="relative group">
-              {" "}
-              <button
-                type="button"
-                onClick={() => {
-                  // Toggle selection on/off when clicking the same template
-                  if (selected === template.name) {
-                    setSelected("");
-                  } else {
-                    setSelected(template.name);
-                  }
-                }}
-                className={cn(
-                  "flex flex-col items-center group",
-                  "transition-all duration-200"
-                )}
-                tabIndex={-1} // Make button itself not focusable
-              >
-                <div
-                  className={cn(
-                    "w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center rounded-xl border-2 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 shadow-lg outline-none",
-                    selected === template.name
-                      ? "border-zinc-400 ring-2 ring-zinc-400/40"
-                      : "border-zinc-700",
-                    "group-hover:shadow-[0_8px_32px_0_rgba(113,113,122,0.18)] group-hover:border-zinc-400",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40",
-                    isFavorite &&
-                      (colorOptions[(template as UserFavorite).color]
-                        ?.borderClass ||
-                        "border-zinc-700")
-                  )}
-                  tabIndex={0}
-                  style={{
-                    boxShadow: "inset 0 2px 8px 0 rgba(113,113,122,0.13)",
-                  }}
-                >
-                  {isFavorite
-                    ? getFavoriteIcon(
-                        (template as UserFavorite).iconType,
-                        (template as UserFavorite).color,
-                        window.innerWidth < 640 ? 30 : 40
-                      )
-                    : getIcon(template)}
-                </div>
-                {/* Tooltip on hover */}
-                <span
-                  className={cn(
-                    "mt-2 text-xs sm:text-sm font-semibold text-zinc-300 text-center max-w-[5rem] sm:max-w-[6rem] truncate transition-all duration-200",
-                    selected === template.name && "text-zinc-300",
-                    isFavorite &&
-                      (colorOptions[(template as UserFavorite).color]?.class ||
-                        "text-zinc-400")
-                  )}
-                  title={template.name}
-                >
-                  {template.name}
-                </span>
-                <span
-                  className={cn(
-                    "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-2 sm:px-3 py-1 rounded bg-zinc-900/95 text-zinc-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
-                    "select-none"
-                  )}
-                >
-                  {template.name}
-                </span>
-              </button>
-              {/* Remove button for favorites */}
-              {isFavorite && onRemoveFavorite && (
-                <button
-                  onClick={() => onRemoveFavorite(template.name)}
-                  className={cn(
-                    "absolute -top-2 -right-2 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center",
-                    "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-                    "text-zinc-400 hover:text-red-400 hover:bg-zinc-900",
-                    "focus:outline-none focus:ring-2 focus:ring-zinc-400/40"
-                  )}
-                  aria-label={`Remove ${template.name}`}
-                >
-                  <VscClose size={12} />
-                </button>
+      >
+        <div className="flex justify-between w-full items-center mb-2">
+          <h3 className="text-zinc-300 font-medium flex items-center gap-2 text-sm sm:text-base">
+            <span>Templates & Favorites</span>
+          </h3>
+          {onAddFavorite && (
+            <button
+              onClick={onAddFavorite}
+              className={cn(
+                "flex items-center gap-1 py-1 px-2 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-300 hover:border-zinc-600 text-xs",
+                "focus:outline-none focus:ring-2 focus:ring-zinc-400/40"
               )}
-            </div>
-          );
-        })}
+            >
+              <VscAdd size={14} />
+              <span>Add Favorite</span>
+            </button>
+          )}
+        </div>
+
+        <div className="w-full flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
+          {allTemplates.map((template) => {
+            const isFavorite = "userAdded" in template;
+            return (
+              <div key={template.name} className="relative group">
+                {" "}
+                <button
+                  type="button"
+                  onClick={() => handleTemplateClick(template.name)}
+                  className={cn(
+                    "flex flex-col items-center group",
+                    "transition-all duration-200"
+                  )}
+                  tabIndex={-1} // Make button itself not focusable
+                >
+                  <div
+                    className={cn(
+                      "w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 flex items-center justify-center rounded-xl border-2 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 shadow-lg outline-none",
+                      selected === template.name
+                        ? "border-zinc-400 ring-2 ring-zinc-400/40"
+                        : "border-zinc-700",
+                      "group-hover:shadow-[0_8px_32px_0_rgba(113,113,122,0.18)] group-hover:border-zinc-400",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40",
+                      isFavorite &&
+                        (colorOptions[(template as UserFavorite).color]
+                          ?.borderClass ||
+                          "border-zinc-700")
+                    )}
+                    tabIndex={0}
+                    style={{
+                      boxShadow: "inset 0 2px 8px 0 rgba(113,113,122,0.13)",
+                    }}
+                  >
+                    {isFavorite
+                      ? getFavoriteIcon(
+                          (template as UserFavorite).iconType,
+                          (template as UserFavorite).color,
+                          window.innerWidth < 640 ? 30 : 40
+                        )
+                      : getIcon(template)}
+                  </div>
+                  {/* Tooltip on hover */}
+                  <span
+                    className={cn(
+                      "mt-2 text-xs sm:text-sm font-semibold text-zinc-300 text-center max-w-[5rem] sm:max-w-[6rem] truncate transition-all duration-200",
+                      selected === template.name && "text-zinc-300",
+                      isFavorite &&
+                        (colorOptions[(template as UserFavorite).color]
+                          ?.class ||
+                          "text-zinc-400")
+                    )}
+                    title={template.name}
+                  >
+                    {template.name}
+                  </span>
+                  <span
+                    className={cn(
+                      "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-8 z-20 px-2 sm:px-3 py-1 rounded bg-zinc-900/95 text-zinc-200 text-xs font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-zinc-700",
+                      "select-none"
+                    )}
+                  >
+                    {template.name}
+                  </span>
+                </button>
+                {/* Remove button for favorites */}
+                {isFavorite && onRemoveFavorite && (
+                  <button
+                    onClick={() => onRemoveFavorite(template.name)}
+                    className={cn(
+                      "absolute -top-2 -right-2 w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center",
+                      "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                      "text-zinc-400 hover:text-red-400 hover:bg-zinc-900",
+                      "focus:outline-none focus:ring-2 focus:ring-zinc-400/40"
+                    )}
+                    aria-label={`Remove ${template.name}`}
+                  >
+                    <VscClose size={12} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+
+StackSelector.displayName = "StackSelector";
 
 export default StackSelector;

@@ -193,9 +193,7 @@ app.whenReady().then(() => {
         const files = fs.readdirSync(targetPath);
         if (files.length > 0) {
           // Continue anyway, commands will handle non-empty directories
-        }
-
-        // Function to finalize with git commit
+        } // Function to finalize with git commit
         const finalizeWithCommit = () => {
           exec(
             `git add . && git commit -m "Initial commit"`,
@@ -213,7 +211,7 @@ app.whenReady().then(() => {
           );
         };
 
-        // Function to install dependencies after project creation
+        // Function to install dependencies after project creation - optimized for performance
         const installDependencies = (devDeps?: string[]) => {
           const pkgJsonPath = path.join(targetPath, "package.json");
 
@@ -246,66 +244,48 @@ app.whenReady().then(() => {
             }
           }
 
-          // Install dev dependencies first if needed, then regular deps
-          const installDev = () => {
-            if (devDeps && devDeps.length > 0) {
-              const devInstallCmd = `${devInstallCommand} ${devDeps.join(" ")}`;
-              console.log("Installing dev dependencies:", devInstallCmd);
+          // Performance optimization: Combine dev and regular dependencies when possible
+          let installCompleted = false;
 
-              exec(devInstallCmd, { cwd: targetPath }, (errDev) => {
-                if (errDev) {
-                  console.warn("Dev dependencies install failed:", errDev);
-                }
-                // Continue with main install regardless
-                mainInstall();
-              });
-            } else {
-              mainInstall();
+          const installTimeout = setTimeout(() => {
+            if (!installCompleted) {
+              console.warn(
+                `${
+                  packageManager || "npm"
+                } install took too long, proceeding anyway`
+              );
+              installCompleted = true;
+              finalizeWithCommit();
             }
-          };
+          }, 25000); // Reduced to 25 seconds timeout for faster failure detection
 
-          // Main dependency installation
-          const mainInstall = () => {
-            let installCompleted = false;
+          // Combine dev deps and regular install for efficiency
+          const combinedCommand =
+            devDeps && devDeps.length > 0
+              ? `${devInstallCommand} ${devDeps.join(" ")} && ${installCommand}`
+              : installCommand;
 
-            const installTimeout = setTimeout(() => {
-              if (!installCompleted) {
+          console.log("Installing dependencies:", combinedCommand);
+
+          exec(combinedCommand, { cwd: targetPath }, (err3, stdout, stderr) => {
+            clearTimeout(installTimeout);
+
+            if (!installCompleted) {
+              installCompleted = true;
+
+              if (err3) {
                 console.warn(
-                  `${
-                    packageManager || "npm"
-                  } install took too long, proceeding anyway`
+                  `${packageManager || "npm"} install failed, but continuing:`,
+                  err3
                 );
-                installCompleted = true;
-                finalizeWithCommit();
+                console.warn("stderr:", stderr);
+              } else {
+                console.log("Dependencies installed successfully");
               }
-            }, 30000); // Reduced to 30 seconds timeout
 
-            exec(
-              installCommand,
-              { cwd: targetPath },
-              (err3, stdout, stderr) => {
-                clearTimeout(installTimeout);
-
-                if (!installCompleted) {
-                  installCompleted = true;
-
-                  if (err3) {
-                    console.warn(
-                      `${
-                        packageManager || "npm"
-                      } install failed, but continuing:`,
-                      err3
-                    );
-                    console.warn("stderr:", stderr);
-                  }
-
-                  finalizeWithCommit();
-                }
-              }
-            );
-          };
-
-          installDev();
+              finalizeWithCommit();
+            }
+          });
         };
 
         // Check if this is a Vite template
@@ -344,11 +324,10 @@ app.whenReady().then(() => {
               console.error("stderr:", stderr);
               return reject("Erreur lors de la création Vite: " + err);
             }
-
             console.log("Vite project created successfully");
 
             try {
-              // Initialize git
+              // Initialize git first
               exec(`git init`, { cwd: targetPath }, (err2) => {
                 if (err2) {
                   console.warn("Git init failed:", err2);
