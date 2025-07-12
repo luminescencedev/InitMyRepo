@@ -36,7 +36,7 @@ jobs:
         shell: powershell
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: "InitMyRepo v${{ steps.get_version.outputs.VERSION }}"
           body: |
@@ -69,5 +69,4 @@ jobs:
             dist/latest.yml
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
