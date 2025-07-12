@@ -12,6 +12,16 @@ import {
 } from "./userStore.js";
 import type { TemplateData } from "./preload.cts";
 
+// Gestion d'erreur globale
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  // Ne pas quitter l'app en cas d'erreur, juste loguer
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
+
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -19,9 +29,13 @@ function createWindow(): BrowserWindow {
     frame: false,
     resizable: true,
     autoHideMenuBar: true,
-    icon: path.join(app.getAppPath(), "/luminescence_icon.png"),
+    icon: isDev()
+      ? path.join(app.getAppPath(), "luminescence_icon.png")
+      : path.join(process.resourcesPath, "luminescence_icon.png"),
     webPreferences: {
-      preload: path.join(app.getAppPath(), "dist-electron/preload.cjs"),
+      preload: isDev()
+        ? path.join(app.getAppPath(), "dist-electron/preload.cjs")
+        : path.join(app.getAppPath(), "dist-electron/preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -36,7 +50,7 @@ function createWindow(): BrowserWindow {
   if (isDev()) {
     mainWindow.loadURL("http://localhost:8080");
   } else {
-    mainWindow.loadFile(path.join(app.getAppPath(), "/dist-react/index.html"));
+    mainWindow.loadFile(path.join(app.getAppPath(), "dist-react/index.html"));
   }
 
   return mainWindow;
