@@ -11,10 +11,10 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
-    
+
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
