@@ -5,11 +5,7 @@
   "directories": {
     "buildResources": "build"
   },
-  "files": [
-    "dist-electron/**/*",
-    "dist-react/**/*",
-    "package.json"
-  ],
+  "files": ["dist-electron/**/*", "dist-react/**/*", "package.json"],
   "asarUnpack": [],
   "nodeGypRebuild": false,
   "npmRebuild": false,

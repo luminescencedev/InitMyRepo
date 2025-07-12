@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
@@ -11,58 +11,58 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          
+          node-version: "22.13.0"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build application
         run: npm run dist:win
-        
+
       - name: Get version from tag
         id: get_version
         run: |
           $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
         shell: powershell
-        
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           name: "InitMyRepo v${{ steps.get_version.outputs.VERSION }}"
           body: |
             ## 🚀 InitMyRepo v${{ steps.get_version.outputs.VERSION }}
-            
+
             ### 📦 Installation
             Téléchargez `InitMyRepo-${{ steps.get_version.outputs.VERSION }}-win-x64.exe` et exécutez-le pour installer l'application.
-            
+
             ### ✨ Nouveautés
             - Interface utilisateur améliorée
             - Performance optimisée
             - Support des gestionnaires de packages multiples (npm, yarn, pnpm, bun)
             - Gestion des dépôts favoris
-            
+
             ### 🔧 Utilisation
             1. Sélectionnez un dossier de destination
             2. Choisissez votre stack de développement
             3. Configurez votre gestionnaire de packages préféré
             4. Cliquez sur "Initialiser le Repository"
-            
+
             ### 🐛 Corrections de bugs
             - Stabilité améliorée lors de l'initialisation des projets
             - Meilleure gestion des erreurs
-            
+
             ---
-            
+
             **Installation complète :** Téléchargez le fichier `.exe` ci-dessous
           files: |
             dist/InitMyRepo-${{ steps.get_version.outputs.VERSION }}-win-x64.exe
