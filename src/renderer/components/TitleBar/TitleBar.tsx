@@ -15,7 +15,7 @@ const TitleBar: React.FC = () => {
     >
       <div className={cn("flex items-center h-full flex-1 md:w-[33vw] ")}>
         <img
-          src="/luminescence_icon.png"
+          src="./luminescence_icon.png"
           alt=""
           className={cn("h-5 w-auto max-h-full px-2 sm:px-3 object-contain")}
         />

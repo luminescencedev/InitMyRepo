@@ -70,11 +70,11 @@ jobs:
             ### 📦 Installation
             Téléchargez `InitMyRepo-${{ steps.get_version.outputs.VERSION }}-win-x64.exe` et exécutez-le pour installer l'application.
 
-            ### ✨ Nouveautés
-            - Interface utilisateur améliorée
-            - Performance optimisée
-            - Support des gestionnaires de packages multiples (npm, yarn, pnpm, bun)
-            - Gestion des dépôts favoris
+            ### ✨ Nouveautés v${{ steps.get_version.outputs.VERSION }}
+            - 🔧 Correction de l'affichage du logo dans l'interface
+            - 🚀 Amélioration de la stabilité des releases
+            - 📦 Optimisation du processus de build
+            - 🎯 Correction des chemins de ressources pour l'application packagée
 
             ### 🔧 Utilisation
             1. Sélectionnez un dossier de destination
@@ -85,12 +85,13 @@ jobs:
             ### 🐛 Corrections de bugs
             - Stabilité améliorée lors de l'initialisation des projets
             - Meilleure gestion des erreurs
+            - Logo de l'application maintenant visible dans la title bar
 
             ---
 
             **Installation complète :** Téléchargez le fichier `.exe` ci-dessous
           files: |
-            dist/*.exe
+            dist/InitMyRepo-${{ steps.get_version.outputs.VERSION }}-win-x64.exe
             dist/latest.yml
           draft: false
           prerelease: false
