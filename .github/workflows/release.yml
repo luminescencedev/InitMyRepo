@@ -12,9 +12,6 @@ jobs:
   build-and-release:
     runs-on: windows-latest
 
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,11 +28,20 @@ jobs:
       - name: Build application
         run: npm run dist:win
 
+      - name: List built files
+        run: |
+          Write-Host "=== Contenu du dossier dist ==="
+          Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, FullName
+          Write-Host "=== Recherche des fichiers .exe ==="
+          Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Format-Table Name, Length, FullName
+        shell: powershell
+
       - name: Get version from tag
         id: get_version
         run: |
           $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Version détectée: $version"
         shell: powershell
 
       - name: Create Release
@@ -72,5 +78,4 @@ jobs:
             dist/latest.yml
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
