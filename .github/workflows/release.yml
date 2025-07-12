@@ -27,6 +27,8 @@ jobs:
 
       - name: Build application
         run: npm run dist:win
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: List built files
         run: |
@@ -34,7 +36,21 @@ jobs:
           Get-ChildItem -Path "dist" -Recurse | Format-Table Name, Length, FullName
           Write-Host "=== Recherche des fichiers .exe ==="
           Get-ChildItem -Path "dist" -Filter "*.exe" -Recurse | Format-Table Name, Length, FullName
+          Write-Host "=== Vérification des chemins de fichiers ==="
+          if (Test-Path "dist\InitMyRepo-1.0.0-win-x64.exe") {
+            Write-Host "✅ Le fichier exe existe à l'emplacement attendu"
+            Get-Item "dist\InitMyRepo-1.0.0-win-x64.exe" | Format-List Name, Length, FullName
+          } else {
+            Write-Host "❌ Le fichier exe n'existe pas à l'emplacement attendu"
+          }
         shell: powershell
+
+      - name: Upload artifacts for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-files
+          path: dist/
+          retention-days: 5
 
       - name: Get version from tag
         id: get_version
@@ -74,7 +90,7 @@ jobs:
 
             **Installation complète :** Téléchargez le fichier `.exe` ci-dessous
           files: |
-            dist/InitMyRepo-${{ steps.get_version.outputs.VERSION }}-win-x64.exe
+            dist/*.exe
             dist/latest.yml
           draft: false
           prerelease: false
