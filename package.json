@@ -1,7 +1,10 @@
 {
   "name": "initmyrepo",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A tool to initialize repositories with customizable tech stacks",
+  "author": "Luminescence",
+  "homepage": "https://github.com/luminescencedev/InitMyRepo",
   "type": "module",
   "main": "dist-electron/main.js",
   "license": "MIT",
@@ -14,21 +17,20 @@
     "preview": "vite preview",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
     "dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac",
-    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
-    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux"
+    "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64 --config.nsis.oneClick=false",
+    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux",
+    "pack": "npm run transpile:electron && npm run build && electron-builder --dir"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.11",
     "clsx": "^2.1.1",
-    "postcss": "^8.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.11"
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/fs-extra": "^11.0.4",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
@@ -41,6 +43,8 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.2.0",
     "npm-run-all": "^4.1.5",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.34.1",
     "vite": "^7.0.0"

@@ -1,16 +1,59 @@
 {
-  "appId": "com.luminescence.b-loader",
-  "files": ["dist-electron", "dist-react"],
-  "icon": "/luminescence_icon.png",
-  "extraResources": ["src/assets/**"],
+  "appId": "com.luminescence.initmyrepo",
+  "productName": "InitMyRepo",
+  "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+  "directories": {
+    "buildResources": "build"
+  },
+  "files": [
+    "dist-electron/**/*",
+    "dist-react/**/*",
+    "package.json"
+  ],
+  "asarUnpack": [],
+  "nodeGypRebuild": false,
+  "npmRebuild": false,
+  "icon": "luminescence_icon.png",
+  "extraResources": [
+    {
+      "from": "src/assets",
+      "to": "assets"
+    }
+  ],
   "mac": {
-    "target": "dmg"
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "luminescence_icon.png",
+    "category": "public.app-category.developer-tools"
   },
   "linux": {
-    "target": "AppImage",
-    "category": "Utility"
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "luminescence_icon.png",
+    "category": "Development"
   },
   "win": {
-    "target": "nsis"
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "luminescence_icon.png"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "InitMyRepo"
   }
 }
